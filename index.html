@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Portfolio — Eva Sun Guizi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #0f0e0c;
+  --ink-mid: #3d3c38;
+  --ink-mute: #7a7870;
+  --ink-faint: #b8b6af;
+  --paper: #f7f5f0;
+  --paper-warm: #ede9e1;
+  --paper-card: #ffffff;
+  --purple: #534AB7;
+  --purple-l: #EEEDFE;
+  --teal: #0F6E56;
+  --teal-l: #E1F5EE;
+  --amber: #9A5C0A;
+  --amber-l: #FDF3E3;
+  --coral: #B84130;
+  --coral-l: #FAECE7;
+  --rule: #d9d6ce;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── TYPOGRAPHY ── */
+.serif { font-family: 'DM Serif Display', Georgia, serif; }
+h1, h2, h3 { font-family: 'DM Serif Display', Georgia, serif; font-weight: 400; line-height: 1.2; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lineGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.reveal { opacity: 0; animation: fadeUp .7s ease forwards; }
+.reveal-1 { animation-delay: .1s; }
+.reveal-2 { animation-delay: .25s; }
+.reveal-3 { animation-delay: .4s; }
+.reveal-4 { animation-delay: .55s; }
+.reveal-5 { animation-delay: .7s; }
+.reveal-6 { animation-delay: .85s; }
+
+/* ── LAYOUT ── */
+.container { max-width: 900px; margin: 0 auto; padding: 0 32px; }
+section { padding: 72px 0; }
+
+/* ── HEADER ── */
+header {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 64px 0 56px;
+  position: relative;
+  overflow: hidden;
+}
+header::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 400px; height: 400px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 50%;
+}
+header::after {
+  content: '';
+  position: absolute;
+  bottom: -120px; right: 60px;
+  width: 260px; height: 260px;
+  border: 1px solid rgba(255,255,255,.04);
+  border-radius: 50%;
+}
+.header-eyebrow {
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 20px;
+  font-weight: 400;
+  animation: fadeIn .6s ease forwards;
+}
+.header-name {
+  font-size: clamp(38px, 6vw, 58px);
+  color: #fff;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+.header-role {
+  font-size: clamp(16px, 2.5vw, 22px);
+  font-family: 'DM Serif Display', serif;
+  font-style: italic;
+  color: rgba(255,255,255,.5);
+  margin-bottom: 32px;
+}
+.header-rule {
+  width: 56px; height: 1px;
+  background: rgba(255,255,255,.25);
+  margin-bottom: 28px;
+  transform-origin: left;
+  animation: lineGrow .8s .3s ease forwards;
+  transform: scaleX(0);
+}
+.header-intro {
+  font-size: 15px;
+  color: rgba(255,255,255,.65);
+  max-width: 560px;
+  line-height: 1.75;
+  font-weight: 300;
+}
+.header-intro strong { color: rgba(255,255,255,.9); font-weight: 500; }
+.header-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 28px; }
+.htag {
+  font-size: 11px;
+  border: 0.5px solid rgba(255,255,255,.2);
+  border-radius: 3px;
+  padding: 4px 12px;
+  color: rgba(255,255,255,.55);
+  letter-spacing: .04em;
+}
+
+/* ── STORY SECTION ── */
+.story-section { background: var(--paper-warm); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.story-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 56px; align-items: start; }
+.story-label {
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-faint); font-weight: 500; padding-top: 6px;
+}
+.story-pull {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(20px, 3vw, 26px);
+  color: var(--ink);
+  line-height: 1.45;
+  margin-bottom: 20px;
+}
+.story-body { font-size: 15px; color: var(--ink-mid); line-height: 1.8; font-weight: 300; }
+.story-body + .story-body { margin-top: 14px; }
+.story-body strong { color: var(--ink); font-weight: 500; }
+
+/* ── PAIN POINTS ── */
+.pain-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+.pain-card {
+  background: var(--paper-card);
+  border: 0.5px solid var(--rule);
+  border-radius: 8px;
+  padding: 20px;
+  position: relative;
+}
+.pain-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 42px;
+  color: var(--paper-warm);
+  position: absolute;
+  top: 8px; right: 14px;
+  line-height: 1;
+  user-select: none;
+}
+.pain-title { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+.pain-body  { font-size: 12px; color: var(--ink-mute); line-height: 1.6; }
+
+/* ── SECTION HEADER ── */
+.sec-eyebrow {
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--ink-faint); margin-bottom: 12px; font-weight: 500;
+}
+.sec-title { font-size: clamp(26px, 4vw, 36px); color: var(--ink); margin-bottom: 8px; }
+.sec-sub   { font-size: 15px; color: var(--ink-mute); font-weight: 300; max-width: 540px; line-height: 1.7; }
+.section-rule { width: 40px; height: 1px; background: var(--rule); margin: 20px 0 40px; }
+
+/* ── MODULE CARDS ── */
+.modules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.mod-card {
+  background: var(--paper-card);
+  border: 0.5px solid var(--rule);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform .2s ease, box-shadow .2s ease;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  color: inherit;
+}
+.mod-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,.09); }
+.mod-accent { height: 4px; }
+.mod-body { padding: 22px; }
+.mod-tag {
+  font-size: 10px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase;
+  margin-bottom: 10px; display: block;
+}
+.mod-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 11px; color: var(--ink-faint);
+  margin-bottom: 4px; display: block;
+}
+.mod-title { font-size: 17px; margin-bottom: 8px; line-height: 1.3; }
+.mod-desc  { font-size: 12px; color: var(--ink-mute); line-height: 1.65; margin-bottom: 16px; }
+.mod-pills { display: flex; gap: 5px; flex-wrap: wrap; }
+.mpill {
+  font-size: 10px; padding: 2px 8px; border-radius: 3px;
+  font-weight: 500; letter-spacing: .03em;
+}
+.mod-link {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500; margin-top: 18px;
+  padding-top: 14px; border-top: 0.5px solid var(--rule);
+  text-decoration: none; transition: gap .2s;
+}
+.mod-card:hover .mod-link { gap: 10px; }
+
+/* ── MODULE COLOR THEMES ── */
+.theme-purple .mod-accent { background: var(--purple); }
+.theme-purple .mod-tag    { color: var(--purple); }
+.theme-purple .mpill      { background: var(--purple-l); color: #3C3489; }
+.theme-purple .mod-link   { color: var(--purple); }
+
+.theme-teal .mod-accent { background: var(--teal); }
+.theme-teal .mod-tag    { color: var(--teal); }
+.theme-teal .mpill      { background: var(--teal-l); color: #085041; }
+.theme-teal .mod-link   { color: var(--teal); }
+
+.theme-amber .mod-accent { background: var(--amber); }
+.theme-amber .mod-tag    { color: var(--amber); }
+.theme-amber .mpill      { background: var(--amber-l); color: #633806; }
+.theme-amber .mod-link   { color: var(--amber); }
+
+/* ── JD ALIGNMENT ── */
+.jd-section { background: var(--ink); color: var(--paper); }
+.jd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 36px; }
+.jd-card {
+  border: 0.5px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  padding: 20px;
+  transition: border-color .2s;
+}
+.jd-card:hover { border-color: rgba(255,255,255,.25); }
+.jd-req {
+  font-size: 11px; color: rgba(255,255,255,.35);
+  text-transform: uppercase; letter-spacing: .08em;
+  margin-bottom: 10px; font-weight: 500;
+}
+.jd-title { font-family: 'DM Serif Display', serif; font-size: 15px; color: #fff; margin-bottom: 8px; }
+.jd-body  { font-size: 12px; color: rgba(255,255,255,.55); line-height: 1.7; }
+.jd-covered {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: #5DCAA5;
+  margin-top: 12px; font-weight: 500;
+}
+.jd-covered::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #5DCAA5; flex-shrink: 0; }
+
+/* ── DESIGN DECISIONS ── */
+.decisions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.decision-card {
+  border-left: 3px solid var(--rule);
+  padding: 16px 20px;
+  background: var(--paper-card);
+  border-radius: 0 8px 8px 0;
+  border-top: 0.5px solid var(--rule);
+  border-right: 0.5px solid var(--rule);
+  border-bottom: 0.5px solid var(--rule);
+}
+.decision-card.accent-purple { border-left-color: var(--purple); }
+.decision-card.accent-teal   { border-left-color: var(--teal); }
+.decision-card.accent-amber  { border-left-color: var(--amber); }
+.decision-card.accent-coral  { border-left-color: var(--coral); }
+.dc-label { font-size: 10px; font-weight: 500; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px; }
+.dc-title { font-size: 14px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+.dc-body  { font-size: 12px; color: var(--ink-mute); line-height: 1.65; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--paper-warm);
+  border-top: 1px solid var(--rule);
+  padding: 48px 0;
+}
+.footer-grid { display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: center; }
+.footer-name { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 4px; }
+.footer-sub  { font-size: 13px; color: var(--ink-mute); }
+.footer-links { display: flex; flex-direction: column; gap: 6px; text-align: right; }
+.footer-links a { font-size: 13px; color: var(--ink-mid); text-decoration: none; }
+.footer-links a:hover { color: var(--purple); }
+.footer-note { margin-top: 32px; padding-top: 24px; border-top: 0.5px solid var(--rule); font-size: 12px; color: var(--ink-faint); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 680px) {
+  .story-grid, .modules-grid, .jd-grid, .decisions-grid { grid-template-columns: 1fr; }
+  .pain-grid { grid-template-columns: 1fr 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .footer-links { text-align: left; }
+}
+@media (max-width: 480px) {
+  .pain-grid { grid-template-columns: 1fr; }
+  .container { padding: 0 20px; }
+  section { padding: 48px 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     HEADER
+══════════════════════════════════ -->
+<header>
+  <div class="container">
+    <p class="header-eyebrow reveal reveal-1">Data Scientist Application · SG Secondary School</p>
+    <h1 class="header-name serif reveal reveal-2">Eva Sun Guizi</h1>
+    <p class="header-role reveal reveal-3">Former Teacher · Data Scientist</p>
+    <div class="header-rule"></div>
+    <p class="header-intro reveal reveal-4">
+      Five years teaching in Singapore schools gave me something most data scientists don't have:
+      <strong>I've lived inside the systems I'm now building solutions for.</strong>
+      This portfolio demonstrates how I would approach the data, automation, and AI challenges at a Singapore secondary school.
+    </p>
+    <div class="header-tags reveal reveal-5">
+      <span class="htag">Python · SQL</span>
+      <span class="htag">Power BI</span>
+      <span class="htag">Machine Learning</span>
+      <span class="htag">Prompt Engineering</span>
+      <span class="htag">Education Domain</span>
+      <span class="htag">Data Governance</span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════
+     THE STORY
+══════════════════════════════════ -->
+<section class="story-section">
+  <div class="container">
+    <div class="story-grid">
+      <div>
+        <p class="story-label reveal reveal-1">The problem I saw</p>
+      </div>
+      <div>
+        <p class="story-pull reveal reveal-2">
+          Every Parent-Teacher Conference, our school turned into a data collection emergency.
+        </p>
+        <p class="story-body reveal reveal-3">
+          As a form teacher, I would spend days before each conference opening
+          <strong>School Cockpit</strong> for CCA records, <strong>RPMS</strong> for existing reports,
+          and five separate Excel files from subject teachers — just to piece together
+          a complete picture of one student. Nothing talked to anything else.
+        </p>
+        <p class="story-body reveal reveal-4">
+          Subject teachers found the comment-writing process tedious and repetitive.
+          Leadership had no single view of which students needed urgent attention.
+          <strong>The data existed — it was just trapped in silos.</strong>
+        </p>
+      </div>
+    </div>
+
+    <div class="pain-grid">
+      <div class="pain-card reveal reveal-3">
+        <span class="pain-num">01</span>
+        <div class="pain-title">Fragmented data sources</div>
+        <div class="pain-body">Grades in RPMS, CCA in Cockpit, teacher comments in individual Excel files. No single source of truth.</div>
+      </div>
+      <div class="pain-card reveal reveal-4">
+        <span class="pain-num">02</span>
+        <div class="pain-title">Manual, repetitive work</div>
+        <div class="pain-body">Teachers copy-pasting scores into comment templates. Form teachers manually consolidating 20+ files before each conference.</div>
+      </div>
+      <div class="pain-card reveal reveal-5">
+        <span class="pain-num">03</span>
+        <div class="pain-title">No early warning system</div>
+        <div class="pain-body">At-risk students only identified reactively — after exam results, not before. Leadership lacked predictive visibility.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     THE THREE MODULES
+══════════════════════════════════ -->
+<section>
+  <div class="container">
+    <p class="sec-eyebrow reveal reveal-1">Portfolio</p>
+    <h2 class="sec-title reveal reveal-2">Three interconnected solutions</h2>
+    <p class="sec-sub reveal reveal-3">
+      Built end-to-end to demonstrate data pipeline design, predictive analytics,
+      AI-enabled automation, and data governance — all grounded in real school operations.
+    </p>
+    <div class="section-rule"></div>
+
+    <div class="modules-grid">
+
+      <!-- MODULE 1 -->
+      <a class="mod-card theme-purple reveal reveal-3" href="javascript:void(0)" onclick="alert('Open student_pipeline.py — included in this folder')">
+        <div class="mod-accent"></div>
+        <div class="mod-body">
+          <span class="mod-num">Module 01</span>
+          <span class="mod-tag">Data Pipeline · Predictive Analytics</span>
+          <h3 class="mod-title serif">Student Intelligence Pipeline</h3>
+          <p class="mod-desc">
+            A Python ETL pipeline that ingests 500 simulated student records across
+            four data domains — academics, attendance, CCA, and pastoral — then applies
+            a weighted risk-scoring model to classify every student into High, Medium,
+            or Low risk tiers.
+          </p>
+          <div class="mod-pills">
+            <span class="mpill">Python · pandas</span>
+            <span class="mpill">Risk scoring</span>
+            <span class="mpill">CSV export</span>
+          </div>
+          <div class="mod-link">View pipeline code →</div>
+        </div>
+      </a>
+
+      <!-- MODULE 2 -->
+      <a class="mod-card theme-teal reveal reveal-4" href="reportready_v2.html" target="_blank">
+        <div class="mod-accent"></div>
+        <div class="mod-body">
+          <span class="mod-num">Module 02 · 03</span>
+          <span class="mod-tag">AI Automation · Workflow Integration</span>
+          <h3 class="mod-title serif">ReportReady — Parent Conference System</h3>
+          <p class="mod-desc">
+            A full-stack web application that replaces the fragmented pre-conference
+            workflow. Subject teachers upload scores and write comments in one place.
+            Form teachers see a live dashboard, then generate and email AI-drafted
+            parent reports with one click.
+          </p>
+          <div class="mod-pills">
+            <span class="mpill">Claude AI API</span>
+            <span class="mpill">Excel import</span>
+            <span class="mpill">Email workflow</span>
+            <span class="mpill">Audit log</span>
+          </div>
+          <div class="mod-link">Open live demo →</div>
+        </div>
+      </a>
+
+      <!-- MODULE 3 — Design doc -->
+      <a class="mod-card theme-amber reveal reveal-5" href="javascript:void(0)" onclick="document.getElementById('design').scrollIntoView({behavior:'smooth'})">
+        <div class="mod-accent"></div>
+        <div class="mod-body">
+          <span class="mod-num">System Design</span>
+          <span class="mod-tag">Architecture · Governance</span>
+          <h3 class="mod-title serif">Data Architecture & Governance Model</h3>
+          <p class="mod-desc">
+            The system design rationale behind ReportReady: data flow architecture,
+            privacy-by-design principles, PDPA compliance considerations, audit trail
+            design, and a proposed n8n automation roadmap for production deployment.
+          </p>
+          <div class="mod-pills">
+            <span class="mpill">Data governance</span>
+            <span class="mpill">PDPA</span>
+            <span class="mpill">n8n roadmap</span>
+          </div>
+          <div class="mod-link">Read design notes ↓</div>
+        </div>
+      </a>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     JD ALIGNMENT
+══════════════════════════════════ -->
+<section class="jd-section">
+  <div class="container">
+    <p class="sec-eyebrow reveal reveal-1" style="color:rgba(255,255,255,.35)">Job description alignment</p>
+    <h2 class="sec-title reveal reveal-2" style="color:#fff">How this portfolio maps to the role</h2>
+    <div class="jd-grid">
+
+      <div class="jd-card reveal reveal-3">
+        <div class="jd-req">Requirement 1</div>
+        <div class="jd-title">Data pipelines & integration frameworks</div>
+        <div class="jd-body">Design, build, and maintain data pipelines across school systems (Google Workspace, n8n, Power BI, RPMS, LMS).</div>
+        <div class="jd-covered">Module 1 pipeline + Excel upload with cross-system Student ID join. Proposed n8n automation in design doc.</div>
+      </div>
+
+      <div class="jd-card reveal reveal-4">
+        <div class="jd-req">Requirement 2</div>
+        <div class="jd-title">Predictive, diagnostic & evaluative intelligence</div>
+        <div class="jd-body">Dashboards and analytics models that give leadership teams actionable insight — not just reports.</div>
+        <div class="jd-covered">Weighted risk model (predictive) · Form teacher dashboard with class analytics (diagnostic) · Trend-ready data schema (evaluative).</div>
+      </div>
+
+      <div class="jd-card reveal reveal-4">
+        <div class="jd-req">Requirement 3</div>
+        <div class="jd-title">Unified data architecture</div>
+        <div class="jd-body">A single source of truth that supports institutional foresight, trend analysis, and strategic reporting.</div>
+        <div class="jd-covered">student_analytics.csv is the single source of truth that feeds all three modules — ReportReady, risk dashboard, and AI reports.</div>
+      </div>
+
+      <div class="jd-card reveal reveal-5">
+        <div class="jd-req">Requirement 4</div>
+        <div class="jd-title">Data governance, privacy & compliance</div>
+        <div class="jd-body">Robust governance structures ensuring accuracy, privacy, and PDPA compliance in collaboration with IT.</div>
+        <div class="jd-covered">Browser-only processing (no data leaves device) · Teacher approval gate before AI letters send · Full audit trail with timestamps.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     DESIGN DECISIONS
+══════════════════════════════════ -->
+<section id="design">
+  <div class="container">
+    <p class="sec-eyebrow reveal reveal-1">System design rationale</p>
+    <h2 class="sec-title reveal reveal-2">Key design decisions</h2>
+    <p class="sec-sub reveal reveal-3">Every choice in this system was deliberate. Here's the reasoning behind the four decisions that matter most.</p>
+    <div class="section-rule"></div>
+
+    <div class="decisions-grid">
+      <div class="decision-card accent-purple reveal reveal-3">
+        <div class="dc-label">Data integration</div>
+        <div class="dc-title">Student ID as the universal join key</div>
+        <div class="dc-body">Names get misspelled. Classes change. Student ID is the only identifier that stays stable across School Cockpit, RPMS, and every teacher's Excel. Designing around this key means any new data source can be integrated without restructuring the pipeline.</div>
+      </div>
+
+      <div class="decision-card accent-teal reveal reveal-4">
+        <div class="dc-label">Privacy by design</div>
+        <div class="dc-title">Client-side Excel parsing — no server required</div>
+        <div class="dc-body">SheetJS parses uploaded files entirely in the browser. Student data never leaves the teacher's device. This isn't just good practice — it removes a whole category of PDPA risk before it can arise, and means the system can be deployed without school IT needing to provision a secure data server.</div>
+      </div>
+
+      <div class="decision-card accent-amber reveal reveal-4">
+        <div class="dc-label">AI governance</div>
+        <div class="dc-title">Human-in-the-loop before every send</div>
+        <div class="dc-body">The AI generates parent letters, but a teacher must review and explicitly approve before anything is sent. The audit log records who generated each letter, when, and who approved it. This is not just a UX choice — it's a governance requirement. An AI-generated letter sent without review is an institutional liability.</div>
+      </div>
+
+      <div class="decision-card accent-coral reveal reveal-5">
+        <div class="dc-label">Risk model design</div>
+        <div class="dc-title">Weighted scoring over raw grades</div>
+        <div class="dc-body">A student failing one subject but with 98% attendance and active CCA participation has a very different risk profile from a student with the same grade but chronic absenteeism. The risk score weights attendance (30%) and socio-behavioural signals (20%) alongside academics (50%) — informed by five years of observing which signals actually predict long-term student outcomes.</div>
+      </div>
+
+      <div class="decision-card accent-purple reveal reveal-5">
+        <div class="dc-label">Production roadmap</div>
+        <div class="dc-title">n8n automation for full deployment</div>
+        <div class="dc-body">In production, the manual Excel upload step would be replaced by an n8n workflow: Google Classroom triggers a webhook → Python script pulls updated scores → student_analytics updates automatically → high-risk students are flagged to the form teacher every Monday morning. The ReportReady interface stays the same; only the data ingestion becomes fully automated.</div>
+      </div>
+
+      <div class="decision-card accent-teal reveal reveal-6">
+        <div class="dc-label">Institutional context</div>
+        <div class="dc-title">Built by someone who's used these systems</div>
+        <div class="dc-body">RPMS is not just an acronym in a job description — I've filled it in. I know why teachers find the comment process draining, what form teachers actually need to see before a conference, and what makes a parent letter land well. Domain knowledge shapes better systems than technical skill alone.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════
+     FOOTER
+══════════════════════════════════ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-name serif">Eva Sun Guizi</div>
+        <div class="footer-sub">Data Scientist · Former Teacher · Singapore</div>
+      </div>
+      <div class="footer-links">
+        <a href="reportready_v2.html" target="_blank">→ Open ReportReady demo</a>
+        <a href="student_pipeline.py">→ Download pipeline code</a>
+        <a href="student_analytics.csv">→ Download sample dataset</a>
+        <a href="mailto:sunguizi@gmail.com">→ sunguizi@gmail.com</a>
+      </div>
+    </div>
+    <div class="footer-note">
+      All student data in this portfolio is fully simulated for demonstration purposes.
+      No real student information was used. · Built for a Singapore secondary school Data Scientist application, 2025.
+    </div>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// Scroll-triggered reveal for below-fold sections
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.animationPlayState = 'running';
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.reveal').forEach(el => {
+  el.style.animationPlayState = 'paused';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
