@@ -321,7 +321,7 @@ footer {
     <p class="header-role reveal reveal-3">Former Teacher · Data Scientist</p>
     <div class="header-rule"></div>
     <p class="header-intro reveal reveal-4">
-      Five years teaching in Singapore schools gave me something most data scientists don't have:
+      Seven years teaching in Singapore schools gave me something most data scientists don't have:
       <strong>I've lived inside the systems I'm now building solutions for.</strong>
       This portfolio demonstrates how I would approach the data, automation, and AI challenges at a Singapore secondary school.
     </p>
@@ -396,42 +396,19 @@ footer {
     </p>
     <div class="section-rule"></div>
 
-    <div class="modules-grid">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
 
-      <!-- MODULE 1 -->
-      <a class="mod-card theme-purple reveal reveal-3" href="javascript:void(0)" onclick="alert('Open student_pipeline.py — included in this folder')">
+      <!-- MODULE 1 — ReportReady -->
+      <a class="mod-card theme-teal reveal reveal-3" href="reportready_v2.html" target="_blank">
         <div class="mod-accent"></div>
         <div class="mod-body">
-          <span class="mod-num">Module 01</span>
-          <span class="mod-tag">Data Pipeline · Predictive Analytics</span>
-          <h3 class="mod-title serif">Student Intelligence Pipeline</h3>
-          <p class="mod-desc">
-            A Python ETL pipeline that ingests 500 simulated student records across
-            four data domains — academics, attendance, CCA, and pastoral — then applies
-            a weighted risk-scoring model to classify every student into High, Medium,
-            or Low risk tiers.
-          </p>
-          <div class="mod-pills">
-            <span class="mpill">Python · pandas</span>
-            <span class="mpill">Risk scoring</span>
-            <span class="mpill">CSV export</span>
-          </div>
-          <div class="mod-link">View pipeline code →</div>
-        </div>
-      </a>
-
-      <!-- MODULE 2 -->
-      <a class="mod-card theme-teal reveal reveal-4" href="reportready_v2.html" target="_blank">
-        <div class="mod-accent"></div>
-        <div class="mod-body">
-          <span class="mod-num">Module 02 · 03</span>
+          <span class="mod-num">Live Demo</span>
           <span class="mod-tag">AI Automation · Workflow Integration</span>
           <h3 class="mod-title serif">ReportReady — Parent Conference System</h3>
           <p class="mod-desc">
-            A full-stack web application that replaces the fragmented pre-conference
-            workflow. Subject teachers upload scores and write comments in one place.
-            Form teachers see a live dashboard, then generate and email AI-drafted
-            parent reports with one click.
+            A full-stack web application replacing the fragmented pre-conference workflow.
+            Subject teachers fill comments in one place. Form teachers generate and email
+            AI-drafted parent reports with one click.
           </p>
           <div class="mod-pills">
             <span class="mpill">Claude AI API</span>
@@ -443,17 +420,38 @@ footer {
         </div>
       </a>
 
-      <!-- MODULE 3 — Design doc -->
-      <a class="mod-card theme-amber reveal reveal-5" href="javascript:void(0)" onclick="document.getElementById('design').scrollIntoView({behavior:'smooth'})">
+      <!-- MODULE 2 — School Analytics -->
+      <a class="mod-card theme-amber reveal reveal-4" href="school_analytics.html" target="_blank">
+        <div class="mod-accent"></div>
+        <div class="mod-body">
+          <span class="mod-num">Analytics Dashboard</span>
+          <span class="mod-tag">Leadership Intelligence · School-wide Analytics</span>
+          <h3 class="mod-title serif">School Analytics Dashboard</h3>
+          <p class="mod-desc">
+            Leadership-level intelligence dashboard. Upload the pipeline CSV to view
+            subject performance gaps, risk distribution by year level, attendance
+            trends, and class rankings by at-risk student count.
+          </p>
+          <div class="mod-pills">
+            <span class="mpill">Chart.js</span>
+            <span class="mpill">CSV upload</span>
+            <span class="mpill">Predictive · Diagnostic · Evaluative</span>
+          </div>
+          <div class="mod-link">Open dashboard →</div>
+        </div>
+      </a>
+
+      <!-- MODULE 3 — System Design -->
+      <a class="mod-card theme-purple reveal reveal-5" href="javascript:void(0)" onclick="document.getElementById('design').scrollIntoView({behavior:'smooth'})">
         <div class="mod-accent"></div>
         <div class="mod-body">
           <span class="mod-num">System Design</span>
           <span class="mod-tag">Architecture · Governance</span>
           <h3 class="mod-title serif">Data Architecture & Governance Model</h3>
           <p class="mod-desc">
-            The system design rationale behind ReportReady: data flow architecture,
-            privacy-by-design principles, PDPA compliance considerations, audit trail
-            design, and a proposed n8n automation roadmap for production deployment.
+            Data flow architecture, privacy-by-design principles, PDPA compliance,
+            audit trail design, and a proposed n8n automation roadmap for
+            production deployment at scale.
           </p>
           <div class="mod-pills">
             <span class="mpill">Data governance</span>
@@ -541,7 +539,7 @@ footer {
       <div class="decision-card accent-coral reveal reveal-5">
         <div class="dc-label">Risk model design</div>
         <div class="dc-title">Weighted scoring over raw grades</div>
-        <div class="dc-body">A student failing one subject but with 98% attendance and active CCA participation has a very different risk profile from a student with the same grade but chronic absenteeism. The risk score weights attendance (30%) and socio-behavioural signals (20%) alongside academics (50%) — informed by five years of observing which signals actually predict long-term student outcomes.</div>
+        <div class="dc-body">A student failing one subject but with 98% attendance and active CCA participation has a very different risk profile from a student with the same grade but chronic absenteeism. The risk score weights attendance (30%) and socio-behavioural signals (20%) alongside academics (50%) — informed by seven years of observing which signals actually predict long-term student outcomes.</div>
       </div>
 
       <div class="decision-card accent-purple reveal reveal-5">
@@ -573,31 +571,19 @@ footer {
         <a href="reportready_v2.html" target="_blank">→ Open ReportReady demo</a>
         <a href="student_pipeline.py">→ Download pipeline code</a>
         <a href="student_analytics.csv">→ Download sample dataset</a>
-        <a href="mailto:sunguizi@gmail.com">→ sunguizi@gmail.com</a>
+        <a href="/cdn-cgi/l/email-protection#0e7d7b60697b6774674e69636f6762206d6163">→ <span class="__cf_email__" data-cfemail="d5a6a0bbb2a0bcafbc95b2b8b4bcb9fbb6bab8">[email&#160;protected]</span></a>
       </div>
     </div>
     <div class="footer-note">
       All student data in this portfolio is fully simulated for demonstration purposes.
-      No real student information was used. · Built for a Singapore secondary school Data Scientist application, 2025.
+      No real student information was used. · Built for a Singapore secondary school Data Scientist application, 2026.
     </div>
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // Scroll-triggered reveal for below-fold sections
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
-      entry.target.style.animationPlayState = 'running';
-      observer.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.12 });
-
-document.querySelectorAll('.reveal').forEach(el => {
-  el.style.animationPlayState = 'paused';
-  observer.observe(el);
-});
-</script>
-</body>
-</html>
+      entry.target.style.animationPlayStat
