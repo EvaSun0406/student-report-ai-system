@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>School Analytics Dashboard — SG Secondary School</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#f4f3ef; --surface:#fff; --border:#e2e0d8; --border-l:#ece9e2;
+  --text:#1a1a18; --muted:#6b6960; --hint:#9b9890;
+  --purple:#534AB7; --purple-l:#EEEDFE; --purple-d:#3C3489;
+  --teal:#0F6E56; --teal-l:#E1F5EE;
+  --amber:#854F0B; --amber-l:#FAEEDA;
+  --coral:#993C1D; --coral-l:#FAECE7;
+  --green:#3B6D11; --green-l:#EAF3DE;
+  --r:10px; --rs:6px;
+}
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; }
+
+/* TOPBAR */
+.topbar { background:#1a1a18; padding:0 28px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.topbar-logo { font-size:16px; font-weight:700; color:#fff; }
+.topbar-sub  { font-size:12px; color:rgba(255,255,255,.45); }
+.topbar-badge { font-size:11px; background:var(--purple-l); color:var(--purple-d); padding:3px 10px; border-radius:99px; font-weight:600; }
+
+/* UPLOAD SCREEN */
+#upload-screen { display:flex; align-items:center; justify-content:center; min-height:calc(100vh - 56px); padding:24px; }
+.upload-card { background:var(--surface); border:0.5px solid var(--border); border-radius:16px; padding:48px 40px; max-width:500px; width:100%; text-align:center; }
+.upload-icon { font-size:40px; margin-bottom:16px; opacity:.6; }
+.upload-title { font-size:20px; font-weight:600; margin-bottom:8px; }
+.upload-sub   { font-size:13px; color:var(--muted); margin-bottom:32px; line-height:1.7; }
+.upload-zone  { border:1.5px dashed var(--border); border-radius:var(--r); padding:28px 20px; cursor:pointer; transition:all .2s; margin-bottom:16px; }
+.upload-zone:hover { border-color:var(--purple); background:var(--purple-l); }
+.upload-zone input { display:none; }
+.upload-zone-label { font-size:13px; font-weight:500; color:var(--text); margin-bottom:4px; }
+.upload-zone-hint  { font-size:11px; color:var(--hint); }
+.btn-primary { background:var(--purple); color:#fff; border:none; border-radius:var(--rs); padding:10px 24px; font-size:13px; font-weight:500; cursor:pointer; transition:background .15s; }
+.btn-primary:hover { background:var(--purple-d); }
+.sample-note { font-size:11px; color:var(--hint); margin-top:12px; }
+
+/* DASHBOARD */
+#dashboard { display:none; padding:28px; max-width:1200px; margin:0 auto; }
+.dash-header { margin-bottom:24px; display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.dash-title { font-size:22px; font-weight:600; }
+.dash-sub   { font-size:13px; color:var(--muted); margin-top:3px; }
+.reload-btn { font-size:12px; color:var(--muted); border:0.5px solid var(--border); border-radius:6px; padding:6px 12px; background:none; cursor:pointer; }
+.reload-btn:hover { color:var(--text); }
+
+/* STAT CARDS */
+.stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+.stat-card { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--r); padding:18px 20px; }
+.stat-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+.stat-val   { font-size:26px; font-weight:600; line-height:1; margin-bottom:4px; }
+.stat-note  { font-size:11px; color:var(--hint); }
+.intel-tag  { font-size:10px; font-weight:600; padding:2px 8px; border-radius:99px; float:right; margin-top:2px; }
+
+/* CHART GRID */
+.chart-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.chart-grid-1 { margin-bottom:16px; }
+.chart-card  { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--r); padding:20px; }
+.chart-title { font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:3px; }
+.chart-desc  { font-size:11px; color:var(--hint); margin-bottom:16px; }
+.chart-wrap  { position:relative; }
+
+/* RISK TABLE */
+.risk-table-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; gap:10px; }
+.filter-row { display:flex; gap:8px; flex-wrap:wrap; }
+.fbtn { font-size:11px; padding:4px 12px; border-radius:99px; border:0.5px solid var(--border); background:var(--surface); cursor:pointer; transition:all .15s; }
+.fbtn.active { background:var(--purple-l); border-color:var(--purple); color:var(--purple-d); font-weight:500; }
+.data-table { width:100%; border-collapse:collapse; font-size:12px; }
+.data-table th { text-align:left; padding:7px 10px; border-bottom:0.5px solid var(--border); font-size:11px; font-weight:600; color:var(--muted); background:var(--bg); }
+.data-table td { padding:8px 10px; border-bottom:0.5px solid var(--border-l); }
+.data-table tr:last-child td { border-bottom:none; }
+.data-table tbody tr:hover { background:var(--bg); }
+.pill { display:inline-block; font-size:10px; padding:2px 8px; border-radius:99px; font-weight:500; }
+.p-coral  { background:var(--coral-l); color:var(--coral); }
+.p-amber  { background:var(--amber-l); color:var(--amber); }
+.p-green  { background:var(--green-l); color:var(--green); }
+.p-purple { background:var(--purple-l); color:var(--purple-d); }
+.table-scroll { max-height:420px; overflow-y:auto; }
+
+/* LOADING */
+.loading { text-align:center; padding:48px; color:var(--muted); font-size:13px; }
+.loading-dots span { animation:blink 1.2s infinite; display:inline-block; }
+.loading-dots span:nth-child(2) { animation-delay:.2s; }
+.loading-dots span:nth-child(3) { animation-delay:.4s; }
+@keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+@media(max-width:700px) {
+  .stat-grid { grid-template-columns:1fr 1fr; }
+  .chart-grid-2 { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:14px">
+    <span class="topbar-logo">School Analytics</span>
+    <span class="topbar-badge">Leadership Dashboard</span>
+  </div>
+  <span class="topbar-sub" id="topbar-file">No data loaded</span>
+</div>
+
+<!-- UPLOAD SCREEN -->
+<div id="upload-screen">
+  <div class="upload-card">
+    <div class="upload-icon">📊</div>
+    <div class="upload-title">School Intelligence Dashboard</div>
+    <div class="upload-sub">Upload <strong>student_analytics.csv</strong> generated by the data pipeline to view school-wide predictive, diagnostic, and evaluative analytics.</div>
+
+    <div class="upload-zone" onclick="document.getElementById('csv-input').click()"
+      ondragover="event.preventDefault();this.style.borderColor='var(--purple)'"
+      ondragleave="this.style.borderColor=''"
+      ondrop="handleDrop(event)">
+      <input type="file" id="csv-input" accept=".csv" onchange="loadCSV(this.files[0])">
+      <div class="upload-zone-label">Click to upload or drag & drop</div>
+      <div class="upload-zone-hint">student_analytics.csv · Parsed entirely in your browser</div>
+    </div>
+
+    <button class="btn-primary" onclick="loadSampleData()">Try with sample data</button>
+    <div class="sample-note">Uses the 500-student simulated dataset included in this portfolio</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="dash-header">
+    <div>
+      <div class="dash-title">School-Wide Analytics</div>
+      <div class="dash-sub" id="dash-sub">SG Secondary School · Semester 1</div>
+    </div>
+    <button class="reload-btn" onclick="resetDashboard()">← Upload new file</button>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stat-grid">
+    <div class="stat-card" style="border-left:3px solid var(--purple)">
+      <div class="stat-label">Total students</div>
+      <div class="stat-val" id="s-total">—</div>
+      <div class="stat-note" id="s-levels">—</div>
+    </div>
+    <div class="stat-card" style="border-left:3px solid var(--teal)">
+      <div class="stat-label">School average</div>
+      <div class="stat-val" id="s-avg">—</div>
+      <div class="stat-note">Overall subject average</div>
+    </div>
+    <div class="stat-card" style="border-left:3px solid #1a73e8">
+      <div class="stat-label">Mean attendance</div>
+      <div class="stat-val" id="s-att">—</div>
+      <div class="stat-note">Across all classes</div>
+    </div>
+    <div class="stat-card" style="border-left:3px solid var(--coral)">
+      <div class="stat-label">At-risk students</div>
+      <div class="stat-val" id="s-risk" style="color:var(--coral)">—</div>
+      <div class="stat-note" id="s-risk-note">High + medium risk tier</div>
+    </div>
+  </div>
+
+  <!-- Row 1: Subject averages + Risk by level -->
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Subject performance — school average</div>
+      <div class="chart-desc">Identifies curriculum gaps across all students · <span style="color:var(--teal);font-weight:500">Diagnostic intelligence</span></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-subjects"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Risk distribution by year level</div>
+      <div class="chart-desc">High/Medium/Low breakdown per Sec level · <span style="color:var(--coral);font-weight:500">Predictive intelligence</span></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-risk-level"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 2: Class scatter + High risk ranking -->
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Attendance trend — Sem 1 vs Sem 2</div>
+      <div class="chart-desc">Classes where attendance is declining need early intervention · <span style="color:var(--amber);font-weight:500">Evaluative intelligence</span></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-scatter"></canvas></div>
+      <div style="display:flex;gap:16px;margin-top:10px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">
+          <span style="width:10px;height:10px;border-radius:2px;background:#D85A30;display:inline-block;flex-shrink:0"></span>
+          Sem 2 absences increased — attendance worsening
+        </span>
+        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">
+          <span style="width:10px;height:10px;border-radius:2px;background:#1D9E75;display:inline-block;flex-shrink:0"></span>
+          Sem 2 absences decreased — attendance improving
+        </span>
+        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px">
+          <span style="width:10px;height:10px;border-radius:2px;background:#EF9F27;display:inline-block;flex-shrink:0"></span>
+          Stable — no significant change
+        </span>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Classes ranked by high-risk student count</div>
+      <div class="chart-desc">Which classes need most support · <span style="color:var(--purple);font-weight:500">Evaluative intelligence</span></div>
+      <div class="chart-wrap" style="height:240px"><canvas id="c-class-rank"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Risk table -->
+  <div class="chart-card chart-grid-1">
+    <div class="risk-table-header">
+      <div>
+        <div class="chart-title" style="margin-bottom:2px">High-risk student list</div>
+        <div class="chart-desc" style="margin-bottom:0">Sorted by risk score — highest risk first · Full actionable list for form teachers and HODs</div>
+      </div>
+      <div class="filter-row" id="level-filters"></div>
+    </div>
+
+    <!-- Risk score explainer -->
+    <div style="margin-bottom:14px">
+      <button onclick="toggleRiskExplainer(this)"
+        style="font-size:11px;color:var(--purple-d);background:var(--purple-l);border:0.5px solid var(--purple);border-radius:6px;padding:5px 12px;cursor:pointer;font-weight:500">
+        How is the risk score calculated? ▾
+      </button>
+      <div id="risk-explainer" style="display:none;margin-top:10px;background:var(--bg);border-radius:var(--rs);padding:14px 16px">
+        <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px">Risk score = weighted combination of three domains (0–100)</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px">
+          <div style="background:var(--surface);border-radius:6px;padding:10px 12px;border-left:3px solid var(--purple)">
+            <div style="font-size:11px;font-weight:600;color:var(--purple-d);margin-bottom:4px">Academic — 50%</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.6">Overall average score (30%)<br>Number of failing subjects (20%)</div>
+          </div>
+          <div style="background:var(--surface);border-radius:6px;padding:10px 12px;border-left:3px solid #1a73e8">
+            <div style="font-size:11px;font-weight:600;color:#0c447c;margin-bottom:4px">Attendance — 30%</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.6">Attendance rate (20%)<br>Chronic absenteeism flag (10%)</div>
+          </div>
+          <div style="background:var(--surface);border-radius:6px;padding:10px 12px;border-left:3px solid var(--amber)">
+            <div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:4px">Behavioural — 20%</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.6">Discipline incidents (8%)<br>Teacher concern flag (5%)<br>No CCA (7%)</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.7;border-top:0.5px solid var(--border);padding-top:8px">
+          <strong style="color:var(--text)">Tiers:</strong>
+          <span style="background:var(--coral-l);color:var(--coral);padding:1px 7px;border-radius:99px;font-weight:500;margin:0 4px">High</span> score &gt; 60 ·
+          <span style="background:var(--amber-l);color:var(--amber);padding:1px 7px;border-radius:99px;font-weight:500;margin:0 4px">Medium</span> score 31–60 ·
+          <span style="background:var(--green-l);color:var(--green);padding:1px 7px;border-radius:99px;font-weight:500;margin:0 4px">Low</span> score ≤ 30
+          <br>Weights are informed by educational research on predictors of long-term student outcomes.
+          A student with high absence rate is flagged even if academic scores are acceptable — because attendance is the earliest indicator of disengagement.
+        </div>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Student ID</th>
+            <th>Level</th>
+            <th>Class</th>
+            <th>Avg score</th>
+            <th>Attendance</th>
+            <th>Risk score ↓</th>
+            <th>Risk tier</th>
+            <th>CCA</th>
+            <th>Concern</th>
+          </tr>
+        </thead>
+        <tbody id="risk-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+let allData = [];
+let chartInstances = {};
+
+// ── CSV LOADING ─────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  if (f) loadCSV(f);
+}
+
+function loadCSV(file) {
+  document.getElementById('topbar-file').textContent = file.name;
+  Papa.parse(file, {
+    header: true, skipEmptyLines: true, dynamicTyping: true,
+    complete: r => { allData = r.data; renderDashboard(); }
+  });
+}
+
+function loadSampleData() {
+  // Generate sample data inline (mirrors student_pipeline.py output)
+  const levels  = ['Sec 1','Sec 2','Sec 3','Sec 4'];
+  const classes = { 'Sec 1':['1E1','1E2','1N1','1N2'], 'Sec 2':['2E1','2E2','2N1','2N2'],
+                    'Sec 3':['3E1','3E2','3N1','3N2'], 'Sec 4':['4E1','4E2','4N1','4N2'] };
+  const ccas    = ['Band','Choir','Debate','Basketball','Swimming','Robotics Club','Drama','Badminton','Environmental Club','Student Council','Art Club'];
+  const subs    = ['English','Mathematics','Science','Mother_Tongue','Humanities','Art'];
+  const rng = (seed) => { let x = Math.sin(seed)*10000; return x - Math.floor(x); };
+
+  allData = [];
+  for (let i = 1; i <= 500; i++) {
+    const lvl   = levels[Math.floor(rng(i*7) * 4)];
+    const cls   = classes[lvl][Math.floor(rng(i*13) * 4)];
+    const base  = 55 + rng(i*3) * 25;
+    const scores = {};
+    subs.forEach((s,j) => { scores[`score_${s}`] = Math.min(100,Math.max(0, Math.round((base + (rng(i*j+11)-0.5)*20)*10)/10)); });
+    const avg   = Math.round(Object.values(scores).reduce((a,b)=>a+b,0)/subs.length*10)/10;
+    // Class-specific attendance pattern — some classes deliberately worse in Sem2
+    const clsHash = cls.split('').reduce((h,c)=>h+c.charCodeAt(0),0);
+    const clsTrend = (clsHash % 3); // 0=declining, 1=improving, 2=stable
+    const baseAbsRate = 0.03 + rng(i*17+clsHash)*0.07; // 3–10% base absence rate
+    const sem1Rate = baseAbsRate;
+    const sem2Rate = clsTrend===0 ? baseAbsRate * (1.4 + rng(i*59)*0.4)  // declining: +40-80%
+                   : clsTrend===1 ? baseAbsRate * (0.6 + rng(i*59)*0.2)  // improving: -20-40%
+                   : baseAbsRate * (0.9 + rng(i*59)*0.2);                // stable: ±10%
+    const sem1Abs = Math.round(sem1Rate * 100);
+    const sem2Abs = Math.round(Math.min(30, sem2Rate * 100));
+    const totalAbsences = sem1Abs + sem2Abs;
+    const att = Math.round(Math.min(100,(1 - totalAbsences/200)*100)*10)/10;
+    const fail  = Object.values(scores).filter(v=>v<50).length;
+    const disc  = Math.floor(rng(i*31) * 3);
+    const concern = (avg<55)||(att<88)||(disc>=2) ? 1 : 0;
+    const rs    = ((1-avg/100)*0.3 + (fail/6)*0.2 + (1-att/100)*0.2 + (disc/3)*0.08 + concern*0.05) * 150;
+    const rScore = Math.min(100, Math.round(rs));
+    const rTier = rScore > 60 ? 'High' : rScore > 30 ? 'Medium' : 'Low';
+    allData.push({
+      student_id:`SGS${String(i).padStart(4,'0')}`, level:lvl, class:cls,
+      ...scores, avg_score:avg, failing_subjects:fail,
+      days_absent_sem1:sem1Abs, days_absent_sem2:sem2Abs,
+      total_absences:totalAbsences,
+      attendance_rate:att, discipline_incidents:disc, teacher_concern_flag:concern,
+      cca: ccas[Math.floor(rng(i*41)*ccas.length)],
+      risk_score:rScore, risk_tier:rTier
+    });
+  }
+  document.getElementById('topbar-file').textContent = 'sample_data_500_students.csv';
+  renderDashboard();
+}
+
+function resetDashboard() {
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('upload-screen').style.display = 'flex';
+  Object.values(chartInstances).forEach(c => c.destroy());
+  chartInstances = {};
+  allData = [];
+  document.getElementById('csv-input').value = '';
+}
+
+// ── RENDER DASHBOARD ────────────────────────────
+function renderDashboard() {
+  document.getElementById('upload-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+
+  const N     = allData.length;
+  const avg   = Math.round(allData.reduce((s,r)=>s+(+r.avg_score||0),0)/N*10)/10;
+  const att   = Math.round(allData.reduce((s,r)=>s+(+r.attendance_rate||0),0)/N*10)/10;
+  const atRisk= allData.filter(r=>r.risk_tier==='High'||r.risk_tier==='Medium').length;
+  const levels= [...new Set(allData.map(r=>r.level))].sort();
+
+  document.getElementById('s-total').textContent    = N;
+  document.getElementById('s-levels').textContent   = levels.join(' · ');
+  document.getElementById('s-avg').textContent      = avg;
+  document.getElementById('s-att').textContent      = att+'%';
+  document.getElementById('s-risk').textContent     = atRisk;
+  document.getElementById('s-risk-note').textContent= Math.round(atRisk/N*100)+'% of school population';
+  document.getElementById('dash-sub').textContent   = `SG Secondary School · ${N} students across ${levels.length} year levels`;
+
+  renderSubjectChart();
+  renderRiskLevelChart();
+  renderScatterChart();
+  renderClassRankChart();
+  renderRiskTable('All');
+  renderLevelFilters();
+}
+
+const SUBJECTS = ['English','Mathematics','Science','Mother_Tongue','Humanities','Art'];
+const SUBJ_LABELS = ['English','Mathematics','Science','Mother Tongue','Humanities','Art'];
+const font = { family:"-apple-system,'Segoe UI',sans-serif", size:11 };
+const grid = 'rgba(0,0,0,0.05)';
+const tick = '#9b9890';
+
+function dc(id) { if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; } }
+
+// Chart 1 — Subject averages bar
+function renderSubjectChart() {
+  dc('subjects');
+  const avgs = SUBJECTS.map(s => {
+    const vals = allData.map(r=>+(r[`score_${s}`]||0)).filter(v=>v>0);
+    return Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10;
+  });
+  const colors = avgs.map(v=>v>=75?'#1D9E75':v>=60?'#534AB7':v>=50?'#BA7517':'#D85A30');
+  chartInstances['subjects'] = new Chart(document.getElementById('c-subjects'),{
+    type:'bar',
+    data:{ labels:SUBJ_LABELS,
+      datasets:[{ data:avgs, backgroundColor:colors, borderRadius:4, borderSkipped:false }] },
+    options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${ctx.raw}/100`}} },
+      scales:{
+        x:{ min:0,max:100, grid:{color:grid}, ticks:{color:tick,font} },
+        y:{ grid:{display:false}, ticks:{color:tick,font} }
+      }
+    }
+  });
+}
+
+// Chart 2 — Risk by level stacked bar
+function renderRiskLevelChart() {
+  dc('risk-level');
+  const levels = ['Sec 1','Sec 2','Sec 3','Sec 4'];
+  const high   = levels.map(l=>allData.filter(r=>r.level===l&&r.risk_tier==='High').length);
+  const medium = levels.map(l=>allData.filter(r=>r.level===l&&r.risk_tier==='Medium').length);
+  const low    = levels.map(l=>allData.filter(r=>r.level===l&&r.risk_tier==='Low').length);
+  chartInstances['risk-level'] = new Chart(document.getElementById('c-risk-level'),{
+    type:'bar',
+    data:{ labels:levels, datasets:[
+      { label:'High',   data:high,   backgroundColor:'#D85A30', borderRadius:0 },
+      { label:'Medium', data:medium, backgroundColor:'#BA7517', borderRadius:0 },
+      { label:'Low',    data:low,    backgroundColor:'#1D9E75', borderRadius:0 },
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'bottom',labels:{font,color:tick,boxWidth:10,padding:8}},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw} students`}} },
+      scales:{
+        x:{ stacked:true, grid:{display:false}, ticks:{color:tick,font} },
+        y:{ stacked:true, grid:{color:grid},    ticks:{color:tick,font} }
+      }
+    }
+  });
+}
+
+// Chart 3 — Sem1 vs Sem2 attendance by class
+function renderScatterChart() {
+  dc('scatter');
+  const classes = [...new Set(allData.map(r=>r.class))].sort();
+  const sem1avg = classes.map(cls => {
+    const rows = allData.filter(r=>r.class===cls);
+    return Math.round(rows.reduce((s,r)=>s+(+r.days_absent_sem1||0),0)/rows.length*10)/10;
+  });
+  const sem2avg = classes.map(cls => {
+    const rows = allData.filter(r=>r.class===cls);
+    return Math.round(rows.reduce((s,r)=>s+(+r.days_absent_sem2||0),0)/rows.length*10)/10;
+  });
+  // Colour: red if Sem2 worse than Sem1, green if improved
+  const borderColors = classes.map((_,i) =>
+    sem2avg[i] > sem1avg[i]+0.5 ? '#D85A30' :
+    sem2avg[i] < sem1avg[i]-0.5 ? '#1D9E75' : '#BA7517'
+  );
+
+  chartInstances['scatter'] = new Chart(document.getElementById('c-scatter'),{
+    type:'bar',
+    data:{
+      labels: classes,
+      datasets:[
+        { label:'Sem 1 absences', data:sem1avg, backgroundColor:'#AFA9EC', borderRadius:0, barPercentage:0.4 },
+        { label:'Sem 2 absences', data:sem2avg, backgroundColor: classes.map((_,i)=>
+            sem2avg[i]>sem1avg[i]+0.5?'#D85A30bb':sem2avg[i]<sem1avg[i]-0.5?'#1D9E75bb':'#EF9F27bb'),
+          borderRadius:0, barPercentage:0.4 }
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{ position:'bottom', labels:{font,color:tick,boxWidth:10,padding:8} },
+        tooltip:{ callbacks:{ label:ctx=>` ${ctx.dataset.label}: ${ctx.raw} days avg` } }
+      },
+      scales:{
+        x:{ grid:{display:false}, ticks:{color:tick,font} },
+        y:{ title:{display:true,text:'Avg days absent',color:tick,font},
+            grid:{color:grid}, ticks:{color:tick,font} }
+      }
+    }
+  });
+}
+
+// Chart 4 — Class ranking by high-risk count
+function renderClassRankChart() {
+  dc('class-rank');
+  const classes = [...new Set(allData.map(r=>r.class))].sort();
+  const ranked  = classes.map(cls=>({
+    cls,
+    high:   allData.filter(r=>r.class===cls&&r.risk_tier==='High').length,
+    medium: allData.filter(r=>r.class===cls&&r.risk_tier==='Medium').length,
+  })).sort((a,b)=>(b.high+b.medium)-(a.high+a.medium));
+
+  chartInstances['class-rank'] = new Chart(document.getElementById('c-class-rank'),{
+    type:'bar',
+    data:{ labels:ranked.map(r=>r.cls),
+      datasets:[
+        { label:'High',   data:ranked.map(r=>r.high),   backgroundColor:'#D85A30', borderRadius:0, borderSkipped:false },
+        { label:'Medium', data:ranked.map(r=>r.medium), backgroundColor:'#EF9F27', borderRadius:0, borderSkipped:false },
+      ]},
+    options:{ responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{
+        legend:{ position:'bottom', labels:{font,color:tick,boxWidth:10,padding:8} },
+        tooltip:{ callbacks:{ label:ctx=>` ${ctx.dataset.label}: ${ctx.raw} students` } }
+      },
+      scales:{
+        x:{ stacked:true, grid:{color:grid}, ticks:{color:tick,font,stepSize:1} },
+        y:{ stacked:true, grid:{display:false}, ticks:{color:tick,font} }
+      }
+    }
+  });
+}
+
+// Risk table
+function toggleRiskExplainer(btn) {
+  const el = document.getElementById('risk-explainer');
+  const open = el.style.display === 'block';
+  el.style.display = open ? 'none' : 'block';
+  btn.textContent = (open ? 'How is the risk score calculated? ▾' : 'How is the risk score calculated? ▴');
+}
+
+function renderLevelFilters() {
+  const levels = ['All','Sec 1','Sec 2','Sec 3','Sec 4'];
+  document.getElementById('level-filters').innerHTML = levels.map(l=>
+    `<button class="fbtn ${l==='All'?'active':''}" onclick="filterTable('${l}',this)">${l}</button>`
+  ).join('');
+}
+
+function filterTable(level, btn) {
+  document.querySelectorAll('#level-filters .fbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderRiskTable(level);
+}
+
+function renderRiskTable(level) {
+  const rows = allData
+    .filter(r => r.risk_tier==='High' || r.risk_tier==='Medium')
+    .filter(r => level==='All' || r.level===level)
+    .sort((a,b) => (+b.risk_score||0)-(+a.risk_score||0));
+
+  const attColor = v => +v<90?'color:var(--coral);font-weight:500':+v<95?'color:var(--amber);font-weight:500':'';
+  const concern  = r => +r.avg_score<55?'Academic — multiple subjects failing'
+    :+r.attendance_rate<90?'Attendance — chronic absenteeism'
+    :+r.discipline_incidents>=2?'Behavioural — multiple incidents'
+    :'Monitor — borderline performance';
+
+  document.getElementById('risk-tbody').innerHTML = rows.map(r=>`
+    <tr>
+      <td style="font-weight:500">${r.student_id}</td>
+      <td>${r.level}</td>
+      <td><span class="pill p-purple">${r.class}</span></td>
+      <td>${(+r.avg_score||0).toFixed(1)}</td>
+      <td style="${attColor(r.attendance_rate)}">${r.attendance_rate}%</td>
+      <td>${r.risk_score}</td>
+      <td><span class="pill ${r.risk_tier==='High'?'p-coral':'p-amber'}">${r.risk_tier}</span></td>
+      <td style="font-size:11px;color:var(--muted)">${r.cca||'—'}</td>
+      <td style="font-size:11px;color:var(--muted)">${concern(r)}</td>
+    </tr>`).join('');
+}
+</script>
+</body>
+</html>

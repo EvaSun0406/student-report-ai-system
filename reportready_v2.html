@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReportReady — Parent Conference System</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#f4f3ef; --surface:#fff; --border:#e2e0d8; --border-l:#ece9e2;
+  --text:#1a1a18; --muted:#6b6960; --hint:#9b9890;
+  --purple:#534AB7; --purple-l:#EEEDFE; --purple-m:#AFA9EC; --purple-d:#3C3489;
+  --teal:#0F6E56; --teal-l:#E1F5EE;
+  --amber:#854F0B; --amber-l:#FAEEDA;
+  --coral:#993C1D; --coral-l:#FAECE7;
+  --green:#3B6D11; --green-l:#EAF3DE;
+  --r:10px; --rs:6px;
+}
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; }
+
+/* LOGIN */
+#login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+.login-card { background:var(--surface); border:0.5px solid var(--border); border-radius:16px; padding:40px; width:100%; max-width:420px; }
+.login-logo { font-size:22px; font-weight:700; color:var(--purple); margin-bottom:4px; }
+.login-sub  { font-size:13px; color:var(--muted); margin-bottom:28px; }
+.role-grid  { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+.role-btn   { border:1.5px solid var(--border); border-radius:var(--r); padding:14px 10px; cursor:pointer; transition:all .15s; background:var(--surface); text-align:left; }
+.role-btn:hover,.role-btn.sel { border-color:var(--purple); background:var(--purple-l); }
+.role-icon  { font-size:22px; margin-bottom:6px; }
+.role-name  { font-size:13px; font-weight:600; }
+.role-desc  { font-size:11px; color:var(--muted); margin-top:2px; }
+.login-btn  { width:100%; background:var(--purple); color:#fff; border:none; border-radius:var(--r); padding:12px; font-size:14px; font-weight:500; cursor:pointer; }
+.login-btn:hover { background:var(--purple-d); }
+.login-hint { font-size:11px; color:var(--hint); text-align:center; margin-top:14px; }
+
+/* APP */
+#app { display:none; flex-direction:column; min-height:100vh; }
+.topbar { background:var(--surface); border-bottom:0.5px solid var(--border); padding:0 24px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.topbar-logo { font-size:16px; font-weight:700; color:var(--purple); }
+.topbar-badge { font-size:11px; background:var(--purple-l); color:var(--purple-d); padding:3px 10px; border-radius:99px; font-weight:500; }
+.logout-btn { font-size:12px; color:var(--hint); cursor:pointer; border:0.5px solid var(--border); border-radius:6px; padding:5px 10px; background:none; }
+.logout-btn:hover { color:var(--text); }
+.main { padding:28px 24px; max-width:1100px; margin:0 auto; width:100%; }
+.page { display:none; }
+.page.active { display:block; }
+.pg-title { font-size:20px; font-weight:600; margin-bottom:4px; }
+.pg-sub   { font-size:13px; color:var(--muted); margin-bottom:24px; }
+.sec-label { font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-bottom:10px; }
+
+/* TABS (role switcher in topbar) */
+.nav-tabs { display:flex; gap:4px; }
+.nav-tab  { font-size:13px; padding:6px 14px; border-radius:6px; cursor:pointer; color:var(--muted); transition:all .15s; border:none; background:none; }
+.nav-tab:hover { background:var(--bg); color:var(--text); }
+.nav-tab.active { background:var(--purple-l); color:var(--purple-d); font-weight:500; }
+
+/* CARDS & BUTTONS */
+.card { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--r); padding:20px; }
+.card+.card { margin-top:12px; }
+.pill { display:inline-block; font-size:11px; padding:2px 9px; border-radius:99px; font-weight:500; }
+.p-green { background:var(--green-l); color:var(--green); }
+.p-amber { background:var(--amber-l); color:var(--amber); }
+.p-coral { background:var(--coral-l); color:var(--coral); }
+.p-purple{ background:var(--purple-l); color:var(--purple-d); }
+.p-teal  { background:var(--teal-l);  color:var(--teal); }
+.p-gray  { background:#f1efe8; color:#5f5e5a; }
+.btn { border-radius:var(--rs); padding:8px 16px; font-size:13px; font-weight:500; cursor:pointer; transition:all .15s; border:none; }
+.btn-primary  { background:var(--purple); color:#fff; }
+.btn-primary:hover { background:var(--purple-d); }
+.btn-primary:disabled { background:var(--purple-m); cursor:not-allowed; }
+.btn-outline  { background:var(--surface); color:var(--text); border:0.5px solid var(--border); }
+.btn-outline:hover { background:var(--bg); }
+.btn-teal { background:var(--teal); color:#fff; }
+.btn-teal:hover { background:#0a5040; }
+.btn-email { background:#1a73e8; color:#fff; }
+.btn-email:hover { background:#1558b0; }
+textarea { width:100%; border:0.5px solid var(--border); border-radius:var(--rs); padding:10px 12px; font-size:13px; font-family:inherit; color:var(--text); resize:vertical; line-height:1.6; background:var(--surface); transition:border-color .15s; }
+textarea:focus { outline:none; border-color:var(--purple-m); }
+textarea:disabled { background:var(--bg); color:var(--muted); }
+.progress-bar { height:5px; background:var(--border-l); border-radius:99px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:99px; background:var(--purple); transition:width .4s; }
+.loading-dots span { animation:blink 1.2s infinite; display:inline-block; }
+.loading-dots span:nth-child(2) { animation-delay:.2s; }
+.loading-dots span:nth-child(3) { animation-delay:.4s; }
+@keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+/* SUBJECT TEACHER */
+.stabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px; }
+.stab  { border:0.5px solid var(--border); border-radius:8px; padding:7px 14px; font-size:13px; cursor:pointer; background:var(--surface); transition:all .15s; position:relative; }
+.stab:hover { background:var(--bg); }
+.stab.active { background:var(--purple-l); border-color:var(--purple-m); color:var(--purple-d); font-weight:500; }
+.stab.done::after { content:'✓'; position:absolute; top:-5px; right:-5px; width:16px; height:16px; background:var(--teal); color:#fff; border-radius:50%; font-size:9px; display:flex; align-items:center; justify-content:center; font-weight:700; }
+.field-label { font-size:12px; font-weight:500; color:var(--muted); margin-bottom:6px; }
+.field-group { margin-bottom:14px; }
+.ai-bar { background:var(--purple-l); border:0.5px solid var(--purple-m); border-radius:var(--rs); padding:8px 12px; display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.ai-bar span { font-size:12px; color:var(--purple-d); }
+.saved-badge { font-size:11px; color:var(--teal); font-weight:500; display:none; }
+
+/* FORM TEACHER */
+.stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:24px; }
+.stat-card { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--r); padding:16px; }
+.stat-label { font-size:11px; color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:.06em; }
+.stat-val   { font-size:22px; font-weight:600; }
+.class-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:12px; }
+.sc-card { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--r); padding:16px; cursor:pointer; transition:all .15s; }
+.sc-card:hover { border-color:var(--purple-m); box-shadow:0 2px 8px rgba(83,74,183,.08); }
+.sc-card.ready   { border-left:3px solid var(--teal); }
+.sc-card.partial { border-left:3px solid var(--amber); }
+.sc-card.sent    { border-left:3px solid var(--purple); opacity:.85; }
+.filter-bar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
+.fbtn { font-size:12px; padding:5px 12px; border-radius:99px; border:0.5px solid var(--border); background:var(--surface); cursor:pointer; transition:all .15s; }
+.fbtn.active { background:var(--purple-l); border-color:var(--purple-m); color:var(--purple-d); font-weight:500; }
+
+/* SENT LOG */
+.sent-row { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:0.5px solid var(--border-l); font-size:13px; }
+.sent-row:last-child { border-bottom:none; }
+.sent-avatar { width:36px; height:36px; border-radius:50%; background:var(--purple-l); color:var(--purple-d); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; flex-shrink:0; }
+
+/* MODAL */
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; align-items:center; justify-content:center; z-index:200; padding:20px; }
+.overlay.open { display:flex; }
+.modal { background:var(--surface); border-radius:16px; width:100%; max-width:780px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; }
+.modal-sm { max-width:520px; }
+.modal-hdr { padding:18px 24px; border-bottom:0.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.modal-hdr h2 { font-size:16px; font-weight:600; }
+.modal-x { background:none; border:none; font-size:20px; cursor:pointer; color:var(--muted); padding:4px 8px; border-radius:6px; }
+.modal-x:hover { background:var(--bg); }
+.modal-body { flex:1; overflow-y:auto; padding:24px; }
+.modal-ftr  { padding:14px 24px; border-top:0.5px solid var(--border); display:flex; gap:10px; justify-content:flex-end; flex-shrink:0; }
+
+/* REPORT CONTENT */
+.rpt-hdr { border-bottom:2px solid var(--purple); padding-bottom:14px; margin-bottom:20px; }
+.rpt-school { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px; }
+.rpt-title  { font-size:18px; font-weight:700; margin-bottom:2px; }
+.rpt-meta   { font-size:12px; color:var(--muted); }
+.rpt-sec-title { font-size:11px; font-weight:600; color:var(--purple); text-transform:uppercase; letter-spacing:.07em; border-bottom:0.5px solid var(--border); padding-bottom:6px; margin:0 0 12px; }
+.rpt-section { margin-bottom:20px; }
+.score-table { width:100%; border-collapse:collapse; font-size:13px; }
+.score-table th { text-align:left; font-size:11px; font-weight:600; color:var(--muted); padding:6px 10px; border-bottom:0.5px solid var(--border); }
+.score-table td { padding:8px 10px; border-bottom:0.5px solid var(--border-l); }
+.score-table tr:last-child td { border-bottom:none; }
+.sbar { height:6px; border-radius:3px; background:var(--border-l); overflow:hidden; width:70px; display:inline-block; vertical-align:middle; margin-left:8px; }
+.sbar-fill { height:100%; border-radius:3px; }
+.tc-block { background:var(--bg); border-left:3px solid var(--purple-m); border-radius:0 var(--rs) var(--rs) 0; padding:10px 14px; margin-bottom:8px; }
+.tc-subj { font-size:11px; font-weight:600; color:var(--purple-d); margin-bottom:4px; }
+.tc-text { font-size:13px; line-height:1.6; }
+.ai-letter-box { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--r); padding:16px 18px; font-size:13px; line-height:1.8; white-space:pre-wrap; }
+
+/* EMAIL COMPOSER */
+.email-field { margin-bottom:14px; }
+.email-field label { font-size:12px; font-weight:500; color:var(--muted); display:block; margin-bottom:5px; }
+.email-field input { width:100%; border:0.5px solid var(--border); border-radius:var(--rs); padding:9px 12px; font-size:13px; font-family:inherit; color:var(--text); background:var(--surface); }
+.email-field input:focus { outline:none; border-color:var(--purple-m); }
+.email-preview { background:var(--bg); border:0.5px solid var(--border); border-radius:var(--rs); padding:14px 16px; font-size:13px; line-height:1.7; white-space:pre-wrap; max-height:280px; overflow-y:auto; color:var(--text); }
+.send-success { background:var(--teal-l); border:0.5px solid var(--teal); border-radius:var(--r); padding:20px; text-align:center; display:none; }
+.send-success h3 { color:var(--teal); font-size:15px; margin-bottom:6px; }
+.send-success p  { font-size:13px; color:var(--muted); }
+
+/* EXCEL UPLOAD */
+.upload-zone { border:1.5px dashed var(--border); border-radius:var(--r); padding:28px 20px; text-align:center; cursor:pointer; transition:all .2s; background:var(--surface); }
+.upload-zone:hover,.upload-zone.drag { border-color:var(--purple-m); background:var(--purple-l); }
+.upload-zone input[type=file] { display:none; }
+.sub-btn:hover { border-color:var(--purple-m) !important; background:var(--purple-l) !important; }
+.sub-btn-active { border-color:var(--purple) !important; background:var(--purple-l) !important; }
+.sub-btn-done { border-color:#9FE1CB !important; }
+.upload-icon { font-size:28px; margin-bottom:8px; opacity:.5; }
+.upload-label { font-size:13px; font-weight:500; color:var(--text); margin-bottom:4px; }
+.upload-hint  { font-size:11px; color:var(--hint); }
+.col-map-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; }
+.col-map-table th { text-align:left; font-size:11px; font-weight:600; color:var(--muted); padding:6px 10px; border-bottom:0.5px solid var(--border); background:var(--bg); }
+.col-map-table td { padding:8px 10px; border-bottom:0.5px solid var(--border-l); vertical-align:middle; }
+.col-map-table select { border:0.5px solid var(--border); border-radius:var(--rs); padding:5px 8px; font-size:12px; font-family:inherit; color:var(--text); background:var(--surface); width:100%; }
+.col-map-table select:focus { outline:none; border-color:var(--purple-m); }
+.preview-table { width:100%; border-collapse:collapse; font-size:12px; }
+.preview-table th { text-align:left; padding:5px 8px; border-bottom:0.5px solid var(--border); font-weight:600; color:var(--muted); background:var(--bg); }
+.preview-table td { padding:5px 8px; border-bottom:0.5px solid var(--border-l); }
+.import-success { background:var(--teal-l); border:0.5px solid var(--teal); border-radius:var(--r); padding:14px 18px; display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.import-success span { font-size:13px; color:var(--teal); font-weight:500; }
+.import-err { background:var(--coral-l); border:0.5px solid var(--coral); border-radius:var(--rs); padding:8px 12px; font-size:12px; color:var(--coral); margin-top:8px; }
+.upload-step { display:none; }
+.upload-step.active { display:block; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">ReportReady</div>
+    <div class="login-sub">SG Secondary School Parent Conference System</div>
+    <div class="sec-label">Sign in as</div>
+    <div class="role-grid">
+      <div class="role-btn" onclick="selectRole('subject')" id="role-subject">
+        <div class="role-icon">📚</div>
+        <div class="role-name">Subject Teacher</div>
+        <div class="role-desc">Fill comments for your subject</div>
+      </div>
+      <div class="role-btn" onclick="selectRole('form')" id="role-form">
+        <div class="role-icon">🏫</div>
+        <div class="role-name">Ms Sun Guizi</div>
+        <div class="role-desc">Form teacher — Class 2E1</div>
+      </div>
+    </div>
+    <button class="login-btn" onclick="login()">Enter Demo</button>
+    <div class="login-hint">All data is simulated · Portfolio demo for Secondary School Data Scientist role</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="topbar-logo">ReportReady</span>
+      <span class="topbar-badge" id="topbar-badge">—</span>
+      <div class="nav-tabs" id="nav-tabs" style="display:none">
+        <button class="nav-tab active" id="tab-main"      onclick="switchTab('main')">Overview</button>
+        <button class="nav-tab"        id="tab-analytics" onclick="switchTab('analytics')">Analytics</button>
+        <button class="nav-tab"        id="tab-design"    onclick="switchTab('design')">System design</button>
+        <button class="nav-tab"        id="tab-sent"      onclick="switchTab('sent')">Sent log</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <span style="font-size:13px;color:var(--muted)" id="topbar-user">—</span>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- SUBJECT TEACHER -->
+    <div class="page" id="page-subject">
+      <div style="display:flex;gap:8px;margin-bottom:24px;border-bottom:0.5px solid var(--border);padding-bottom:0">
+        <button class="nav-tab active" id="stab-comments" onclick="switchSubTab('comments')" style="border-radius:6px 6px 0 0;border-bottom:none">My comments</button>
+        <button class="nav-tab" id="stab-upload" onclick="switchSubTab('upload')" style="border-radius:6px 6px 0 0;border-bottom:none">Upload scores</button>
+      </div>
+      <div id="subtab-comments">
+      <div class="pg-title" id="sub-page-title">My Students — Subject Comments</div>
+      <div class="pg-sub" id="sub-page-sub">Select a subject below, then fill in your Semester 1 comments.</div>
+
+      <!-- Subject selector -->
+      <div style="margin-bottom:20px">
+        <div class="sec-label" style="margin-bottom:8px">Select subject</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap" id="subject-selector"></div>
+      </div>
+
+      <!-- Progress bar (shown after subject selected) -->
+      <div id="sub-progress-wrap" style="display:none;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="flex:1">
+            <div class="sec-label" style="margin-bottom:5px">Your completion progress</div>
+            <div class="progress-bar"><div class="progress-fill" id="teacher-pb" style="width:0%"></div></div>
+          </div>
+          <span style="font-size:13px;color:var(--muted);white-space:nowrap" id="teacher-pt">0 / 5 done</span>
+        </div>
+      </div>
+
+      <!-- Student tabs + panel (shown after subject selected) -->
+      <div id="sub-student-wrap" style="display:none">
+        <div class="stabs" id="stabs"></div>
+        <div class="card" id="student-panel"></div>
+      </div>
+      </div>
+
+      <div id="subtab-upload" style="display:none">
+        <div class="pg-title">Upload student scores</div>
+        <div class="pg-sub">Upload your Excel file. The system will read your WA1 and WA2 scores and match them to students by Student ID.</div>
+
+        <!-- Step 1: Drop zone -->
+        <div class="upload-step active" id="upload-s1">
+          <div class="card" style="margin-bottom:12px">
+            <div class="sec-label">Expected Excel format</div>
+            <table class="preview-table">
+              <thead><tr><th>Student ID</th><th>Name</th><th>Class</th><th>WA1</th><th>WA2</th></tr></thead>
+              <tbody>
+                <tr><td>2E101</td><td>Aisha Binte Rahman</td><td>2E1</td><td>81</td><td>83</td></tr>
+                <tr><td>2E102</td><td>Chloe Tan Wei Xin</td><td>2E1</td><td>60</td><td>66</td></tr>
+                <tr style="color:var(--hint)"><td colspan="5" style="font-style:italic;padding-top:6px">Column names can vary — you'll map them in the next step.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()"
+            ondragover="event.preventDefault();this.classList.add('drag')"
+            ondragleave="this.classList.remove('drag')"
+            ondrop="handleDrop(event)">
+            <input type="file" id="file-input" accept=".xlsx,.xls,.csv" onchange="handleFile(this.files[0])">
+            <div class="upload-icon">📄</div>
+            <div class="upload-label">Click to upload or drag & drop</div>
+            <div class="upload-hint">Supports .xlsx, .xls, .csv · File never leaves your browser</div>
+          </div>
+          <div class="import-err" id="upload-err" style="display:none"></div>
+        </div>
+
+        <!-- Step 2: Column mapping -->
+        <div class="upload-step" id="upload-s2">
+          <div class="card" style="margin-bottom:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div>
+                <div style="font-size:14px;font-weight:600" id="map-filename">file.xlsx</div>
+                <div style="font-size:12px;color:var(--muted)" id="map-rowcount"></div>
+              </div>
+              <button class="btn btn-outline" style="font-size:12px" onclick="resetUpload()">← Choose different file</button>
+            </div>
+            <div class="sec-label">Map your columns</div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:10px">We detected these column headers. Confirm which column contains each piece of data.</div>
+            <table class="col-map-table">
+              <thead><tr><th style="width:40%">Required field</th><th>Your column</th><th style="width:30%">Preview</th></tr></thead>
+              <tbody id="col-map-rows"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn btn-outline" onclick="resetUpload()">Cancel</button>
+            <button class="btn btn-primary" onclick="confirmImport()">Import scores</button>
+          </div>
+          <div class="import-err" id="map-err" style="display:none"></div>
+        </div>
+
+        <!-- Step 3: Success -->
+        <div class="upload-step" id="upload-s3">
+          <div class="import-success">
+            <span style="font-size:22px">✓</span>
+            <div>
+              <span id="import-success-msg">Scores imported.</span>
+              <div style="font-size:12px;color:var(--teal);margin-top:2px" id="import-success-detail"></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="sec-label" style="margin-bottom:10px">Updated student scores</div>
+            <table class="preview-table" id="import-preview-table"></table>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:10px">
+            <button class="btn btn-outline" onclick="resetUpload()">Upload another file</button>
+            <button class="btn btn-primary" onclick="switchSubTab('comments')">Go to comments →</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end page-subject -->
+
+    <!-- FORM TEACHER MAIN -->
+    <div class="page" id="page-form-main">
+      <div class="pg-title">Class 2E1 — Parent Conference</div>
+      <div class="pg-sub">Review comment status, generate AI reports, and send to parents via email.</div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Students</div><div class="stat-val">5</div></div>
+        <div class="stat-card"><div class="stat-label">Comments ready</div><div class="stat-val" id="ft-ready" style="color:var(--teal)">0</div></div>
+        <div class="stat-card"><div class="stat-label">Reports generated</div><div class="stat-val" id="ft-rpts" style="color:var(--purple)">0</div></div>
+        <div class="stat-card"><div class="stat-label">Emails sent</div><div class="stat-val" id="ft-sent" style="color:#1a73e8">0</div></div>
+      </div>
+      <div class="filter-bar">
+        <span style="font-size:12px;color:var(--muted)">Filter:</span>
+        <button class="fbtn active" onclick="filterCards('all',this)">All</button>
+        <button class="fbtn" onclick="filterCards('ready',this)">Ready</button>
+        <button class="fbtn" onclick="filterCards('partial',this)">Incomplete</button>
+        <button class="fbtn" onclick="filterCards('sent',this)">Sent</button>
+      </div>
+      <div class="class-grid" id="class-grid"></div>
+    </div>
+
+    <!-- ANALYTICS PAGE -->
+    <div class="page" id="page-analytics">
+      <div class="pg-title">Class 2E1 — Analytics</div>
+      <div class="pg-sub">Diagnostic intelligence for leadership. Data drawn from uploaded scores and student records.</div>
+
+      <!-- Insight strip -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px">
+        <div class="stat-card" style="border-left:3px solid var(--teal)">
+          <div class="stat-label">Class average</div>
+          <div class="stat-val" id="an-avg">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">All subjects combined</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid #1a73e8">
+          <div class="stat-label">Mean attendance</div>
+          <div class="stat-val" id="an-att">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">This semester</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--coral)">
+          <div class="stat-label">Students at risk</div>
+          <div class="stat-val" id="an-risk" style="color:var(--coral)">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">High + medium tier</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--amber)">
+          <div class="stat-label">Weakest subject</div>
+          <div class="stat-val" id="an-weak" style="font-size:16px;margin-top:4px">—</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Lowest class avg</div>
+        </div>
+      </div>
+
+      <!-- Row 1: Subject radar + score distribution -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="card">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Subject performance</div>
+          <div style="font-size:11px;color:var(--hint);margin-bottom:14px">Class average per subject — identifies curriculum gaps</div>
+          <div style="position:relative;height:220px"><canvas id="chart-subject"></canvas></div>
+        </div>
+        <div class="card">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Score distribution</div>
+          <div style="font-size:11px;color:var(--hint);margin-bottom:14px">How students are spread across performance bands</div>
+          <div style="position:relative;height:220px"><canvas id="chart-dist"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 2: WA1 vs WA2 trend + attendance vs score scatter -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="card">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">WA1 vs WA2 comparison (Mother Tongue)</div>
+          <div style="font-size:11px;color:var(--hint);margin-bottom:14px">Grouped bars per student — WA1 and WA2 side by side, no cross-student connection</div>
+          <div style="position:relative;height:220px"><canvas id="chart-trend"></canvas></div>
+        </div>
+        <div class="card">
+          <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Attendance vs academic score</div>
+          <div style="font-size:11px;color:var(--hint);margin-bottom:14px">Correlation between attendance rate and overall average</div>
+          <div style="position:relative;height:220px"><canvas id="chart-scatter"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Risk breakdown -->
+      <div class="card">
+        <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Student risk profile — Class 2E1</div>
+        <div style="font-size:11px;color:var(--hint);margin-bottom:16px">Multi-factor risk assessment combining academics, attendance, and pastoral signals. Predictive — not reactive.</div>
+        <div id="risk-table"></div>
+      </div>
+    </div>
+
+    <!-- SYSTEM DESIGN PAGE -->
+    <div class="page" id="page-design">
+      <div class="pg-title">System design & data governance</div>
+      <div class="pg-sub">Architecture decisions, privacy principles, and PDPA compliance — for IT review and institutional records.</div>
+
+      <!-- Row 1: Data flow + Privacy -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+
+        <div class="card">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--purple);margin-bottom:8px">Data flow architecture</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">How data moves through the system</div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">Input sources</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+              <span style="font-size:11px;padding:3px 10px;background:#F1EFE8;color:#444441;border:0.5px solid #d3d1c7;border-radius:5px">School Cockpit</span>
+              <span style="font-size:11px;padding:3px 10px;background:#F1EFE8;color:#444441;border:0.5px solid #d3d1c7;border-radius:5px">RPMS</span>
+              <span style="font-size:11px;padding:3px 10px;background:#F1EFE8;color:#444441;border:0.5px solid #d3d1c7;border-radius:5px">Teacher Excel</span>
+            </div>
+            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">Integration layer</div>
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+              <span style="font-size:11px;padding:3px 10px;background:var(--purple-l);color:var(--purple-d);border:0.5px solid var(--purple-m);border-radius:5px">SheetJS parse</span>
+              <span style="font-size:11px;color:var(--hint)">→</span>
+              <span style="font-size:11px;padding:3px 10px;background:var(--purple-l);color:var(--purple-d);border:0.5px solid var(--purple-m);border-radius:5px">Student ID join</span>
+              <span style="font-size:11px;color:var(--hint)">→</span>
+              <span style="font-size:11px;padding:3px 10px;background:var(--teal-l);color:var(--teal);border:0.5px solid #9FE1CB;border-radius:5px">Unified record</span>
+            </div>
+            <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px">Outputs</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span style="font-size:11px;padding:3px 10px;background:var(--teal-l);color:var(--teal);border:0.5px solid #9FE1CB;border-radius:5px">Risk model</span>
+              <span style="font-size:11px;padding:3px 10px;background:var(--teal-l);color:var(--teal);border:0.5px solid #9FE1CB;border-radius:5px">AI parent letter</span>
+              <span style="font-size:11px;padding:3px 10px;background:var(--teal-l);color:var(--teal);border:0.5px solid #9FE1CB;border-radius:5px">Analytics dashboard</span>
+            </div>
+          </div>
+          <div style="background:var(--bg);border-radius:6px;padding:10px 12px;font-size:12px;color:var(--muted);line-height:1.6">
+            <strong style="color:var(--text)">Key design decision:</strong> Student ID is the universal join key across all sources — stable across School Cockpit, RPMS, and every teacher's Excel file.
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--teal);margin-bottom:8px">Privacy by design</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px">Three layers of data protection</div>
+          <div style="border-left:3px solid var(--teal);padding-left:14px;margin-bottom:12px">
+            <div style="font-size:11px;font-weight:600;color:var(--teal);margin-bottom:3px">Client-side processing only</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">Excel files are parsed entirely in the browser using SheetJS. Student data never leaves the teacher's device and is never transmitted to any external server. This eliminates a whole category of PDPA risk before it can arise.</div>
+          </div>
+          <div style="border-left:3px solid var(--purple);padding-left:14px;margin-bottom:12px">
+            <div style="font-size:11px;font-weight:600;color:var(--purple);margin-bottom:3px">Human-in-the-loop approval</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">AI generates parent letters, but a teacher must review and explicitly approve before anything is sent. An AI-generated letter sent without review is an institutional liability — this gate is non-negotiable.</div>
+          </div>
+          <div style="border-left:3px solid var(--amber);padding-left:14px">
+            <div style="font-size:11px;font-weight:600;color:var(--amber);margin-bottom:3px">Full audit trail</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6">Every generated letter is logged with: who generated it, timestamp, which student, and send status. The Sent log tab provides a complete record for institutional accountability.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: n8n roadmap + PDPA -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+
+        <div class="card">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--amber);margin-bottom:8px">Production roadmap</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px">n8n automation — from demo to deployment</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">The current manual Excel upload would be replaced by an n8n automation workflow, connecting directly to school systems.</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <div style="width:20px;height:20px;border-radius:50%;background:var(--purple-l);color:var(--purple-d);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">1</div>
+              <div style="font-size:12px;color:var(--text);line-height:1.5"><strong style="font-weight:500">Trigger:</strong> New scores entered in Google Classroom or RPMS fires a webhook</div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <div style="width:20px;height:20px;border-radius:50%;background:var(--purple-l);color:var(--purple-d);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">2</div>
+              <div style="font-size:12px;color:var(--text);line-height:1.5"><strong style="font-weight:500">Process:</strong> Python script pulls updated data, re-runs risk scoring model, updates unified student records</div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <div style="width:20px;height:20px;border-radius:50%;background:var(--purple-l);color:var(--purple-d);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">3</div>
+              <div style="font-size:12px;color:var(--text);line-height:1.5"><strong style="font-weight:500">Alert:</strong> Every Monday morning, form teachers notified of newly flagged high-risk students</div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <div style="width:20px;height:20px;border-radius:50%;background:var(--teal-l);color:var(--teal);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">✓</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.5">ReportReady UI stays identical — only the data ingestion layer changes</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--coral);margin-bottom:8px">PDPA compliance</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px">Singapore Personal Data Protection Act</div>
+          <div style="display:flex;flex-direction:column;gap:0">
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border-l)">
+              <div style="width:6px;height:6px;border-radius:50%;background:var(--coral);flex-shrink:0;margin-top:5px"></div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px">Purpose limitation</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.5">Student data is used solely for parent reporting. Not retained beyond the active session, not shared with third parties.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border-l)">
+              <div style="width:6px;height:6px;border-radius:50%;background:var(--coral);flex-shrink:0;margin-top:5px"></div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px">Transparency</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.5">AI-generated content is clearly labelled. Parents receive letters reviewed and approved by a named teacher — not anonymous AI output.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border-l)">
+              <div style="width:6px;height:6px;border-radius:50%;background:var(--coral);flex-shrink:0;margin-top:5px"></div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px">Access control</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.5">Subject teachers access only their own students' data. Form teachers see class-level data. Role separation built into the login system.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0">
+              <div style="width:6px;height:6px;border-radius:50%;background:var(--coral);flex-shrink:0;margin-top:5px"></div>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:2px">Accountability</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.5">Audit log records every action — who generated each report, when, and confirmation of teacher approval before send.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: Why this matters -->
+      <div class="card" style="background:var(--purple-l);border-color:var(--purple-m)">
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start">
+          <div style="font-size:28px;line-height:1">💡</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--purple-d);margin-bottom:6px">Why governance is built in from the start — not added later</div>
+            <div style="font-size:12px;color:var(--purple-d);line-height:1.75;opacity:.85">
+              Most data systems treat governance as a compliance checkbox — something added after the system is built. This system inverts that: every feature was designed with accountability in mind. The browser-only parsing wasn't a technical constraint, it was a privacy choice. The teacher approval gate wasn't a UX decision, it was a governance requirement. The audit log wasn't an afterthought, it was the first thing designed. This reflects five years of understanding what happens when student data is mishandled in a school — and what it costs.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SENT LOG -->
+    <div class="page" id="page-sent">
+      <div class="pg-title">Sent Email Log</div>
+      <div class="pg-sub">Audit trail of all parent emails sent this conference cycle.</div>
+      <div class="card" id="sent-log-content">
+        <div style="text-align:center;padding:32px;color:var(--hint);font-size:13px">No emails sent yet.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="overlay" id="report-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 id="modal-title">Parent Report</h2>
+      <button class="modal-x" onclick="closeModal('report-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-ftr">
+      <button class="btn btn-outline" onclick="closeModal('report-modal')">Close</button>
+      <button class="btn btn-outline" id="btn-regen" onclick="regenReport()" style="display:none">Regenerate</button>
+      <button class="btn btn-email" id="btn-send-email" onclick="openEmailComposer()" style="display:none">✉ Send to parent</button>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL COMPOSER MODAL -->
+<div class="overlay" id="email-modal">
+  <div class="modal modal-sm">
+    <div class="modal-hdr">
+      <h2>Send Report to Parent</h2>
+      <button class="modal-x" onclick="closeModal('email-modal')">✕</button>
+    </div>
+    <div class="modal-body" id="email-modal-body">
+      <div id="email-form-view">
+        <div class="email-field">
+          <label>To (parent email)</label>
+          <input type="email" id="email-to" placeholder="parent@example.com">
+        </div>
+        <div class="email-field">
+          <label>Subject</label>
+          <input type="text" id="email-subject" value="">
+        </div>
+        <div class="email-field">
+          <label>Message preview</label>
+          <div class="email-preview" id="email-preview"></div>
+        </div>
+        <div style="font-size:11px;color:var(--amber);background:var(--amber-l);padding:8px 12px;border-radius:6px;margin-top:4px">
+          ⚠ AI-drafted content — reviewed and approved by Mrs Lim before sending
+        </div>
+      </div>
+      <div class="send-success" id="send-success">
+        <div style="font-size:28px;margin-bottom:8px">✅</div>
+        <h3>Email sent successfully</h3>
+        <p id="send-success-detail"></p>
+      </div>
+    </div>
+    <div class="modal-ftr" id="email-modal-ftr">
+      <button class="btn btn-outline" onclick="closeModal('email-modal')">Cancel</button>
+      <button class="btn btn-email" id="btn-confirm-send" onclick="confirmSend()">Send email</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────
+const STUDENTS = [
+  { id:"2E101", name:"Aisha Binte Rahman",    avg:78.2, att:97.5, cca:"Band", ccaH:4, risk:"Low",
+    wa:{mt:{wa1:80,wa2:84,avg:82.4}},
+    scores:{English:82,Mathematics:75,Science:79,"Mother Tongue":88,Humanities:74,Art:71},
+    leadership:"Class Chairman",
+    parentEmail:"mrs.rahman@email.com" },
+  { id:"2E102", name:"Chloe Tan Wei Xin",     avg:52.1, att:91.0, cca:"Band", ccaH:3, risk:"High",
+    wa:{mt:{wa1:51,wa2:57,avg:54.6}},
+    scores:{English:63,Mathematics:41,Science:48,"Mother Tongue":55,Humanities:50,Art:56},
+    leadership:"Subject Rep (English)",
+    parentEmail:"tan.family@email.com" },
+  { id:"2E103", name:"Priya Nair",             avg:65.8, att:94.0, cca:"Swimming", ccaH:5, risk:"Medium",
+    wa:{mt:{wa1:58,wa2:63,avg:61.0}},
+    scores:{English:70,Mathematics:62,Science:68,"Mother Tongue":60,Humanities:66,Art:73},
+    leadership:"Peer Support Leader",
+    parentEmail:"nair.family@email.com" },
+  { id:"2E104", name:"Zhang Hui Ling",         avg:88.4, att:99.0, cca:"Robotics Club", ccaH:6, risk:"Low",
+    wa:{mt:{wa1:80,wa2:86,avg:83.6}},
+    scores:{English:85,Mathematics:94,Science:91,"Mother Tongue":82,Humanities:84,Art:90},
+    leadership:"Vice Chairman",
+    parentEmail:"zhang.family@email.com" },
+  { id:"2E105", name:"Nurul Izzah Binte Aziz", avg:60.3, att:88.5, cca:"Choir", ccaH:3.5, risk:"Medium",
+    wa:{mt:{wa1:66,wa2:72,avg:69.6}},
+    scores:{English:65,Mathematics:55,Science:58,"Mother Tongue":70,Humanities:58,Art:56},
+    leadership:"Subject Rep (Mother Tongue)",
+    parentEmail:"aziz.family@email.com" },
+];
+
+const SUBS = ["English","Mathematics","Science","Mother Tongue","Humanities","Art"];
+const comments = {};
+STUDENTS.forEach(s => { comments[s.id] = {}; SUBS.forEach(sub => { comments[s.id][sub] = ""; }); });
+
+let role = null, currentSIdx = 0, currentSid = null;
+let generatedReports = {}, sentEmails = [];
+
+// ─── LOGIN ───────────────────────────────────────
+function selectRole(r) {
+  role = r;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('sel'));
+  document.getElementById('role-'+r).classList.add('sel');
+}
+function login() {
+  if (!role) { selectRole('subject'); return; }
+  document.getElementById('login-screen').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex'; app.style.flexDirection = 'column';
+  if (role === 'subject') {
+    document.getElementById('topbar-badge').textContent = 'Subject Teacher';
+    document.getElementById('topbar-user').textContent  = 'Subject Teacher';
+    document.getElementById('page-subject').classList.add('active');
+    renderSubjectPage();
+  } else {
+    document.getElementById('topbar-badge').textContent = 'Form Teacher';
+    document.getElementById('topbar-user').textContent  = 'Ms Sun Guizi (2E1)';
+    document.getElementById('nav-tabs').style.display   = 'flex';
+    prefillComments();
+    document.getElementById('page-form-main').classList.add('active');
+    renderFormPage();
+  }
+}
+function logout() { location.reload(); }
+function switchTab(t) {
+  document.querySelectorAll('#nav-tabs .nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  ['form-main','analytics','design','sent'].forEach(p => document.getElementById('page-'+p).classList.remove('active'));
+  const pageMap = { main:'form-main', analytics:'analytics', design:'design', sent:'sent' };
+  document.getElementById('page-'+pageMap[t]).classList.add('active');
+  if (t === 'sent')      renderSentLog();
+  if (t === 'analytics') renderAnalytics();
+}
+
+const SUBJECT_LIST = ["English","Mathematics","Science","Mother Tongue","Humanities","Art"];
+let currentSubject = null;
+
+function getMySub() { return currentSubject; }
+
+function selectSubject(sub) {
+  currentSubject = sub;
+  // Highlight selected button
+  document.querySelectorAll('#subject-selector .sub-btn').forEach(b =>
+    b.classList.toggle('sub-btn-active', b.dataset.sub === sub)
+  );
+  // Update page heading
+  document.getElementById('sub-page-title').textContent = `My Students — ${sub} Comments`;
+  document.getElementById('sub-page-sub').textContent   =
+    `Enter your Semester 1 comments for ${sub}. WA1 and WA2 scores shown for reference.`;
+  // Show progress and student panel
+  document.getElementById('sub-progress-wrap').style.display = 'block';
+  document.getElementById('sub-student-wrap').style.display  = 'block';
+  currentSIdx = 0;
+  renderTabs();
+  selectTab(0);
+}
+
+function renderSubjectPage() {
+  currentSubject = null;
+  document.getElementById('sub-page-title').textContent = 'My Students — Subject Comments';
+  document.getElementById('sub-page-sub').textContent   = 'Select a subject below, then fill in your Semester 1 comments.';
+  document.getElementById('sub-progress-wrap').style.display = 'none';
+  document.getElementById('sub-student-wrap').style.display  = 'none';
+
+  // Build subject selector buttons
+  document.getElementById('subject-selector').innerHTML = SUBJECT_LIST.map(sub => {
+    const filled = STUDENTS.filter(s => comments[s.id][sub]?.trim().length > 20).length;
+    const pct    = Math.round(filled / STUDENTS.length * 100);
+    const allDone = filled === STUDENTS.length;
+    return `<button class="sub-btn ${allDone ? 'sub-btn-done' : ''}" data-sub="${sub}"
+      onclick="selectSubject('${sub}')"
+      style="border:0.5px solid var(--border);border-radius:8px;padding:10px 16px;
+             background:var(--surface);cursor:pointer;transition:all .15s;text-align:left;min-width:130px">
+      <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px">${sub}</div>
+      <div style="font-size:11px;color:var(--muted)">${filled}/${STUDENTS.length} done</div>
+      <div style="height:3px;background:var(--border-l);border-radius:99px;margin-top:6px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:${allDone?'var(--teal)':'var(--purple)'};border-radius:99px;transition:width .3s"></div>
+      </div>
+    </button>`;
+  }).join('');
+}
+function renderTabs() {
+  const sub = getMySub();
+  document.getElementById('stabs').innerHTML = STUDENTS.map((s,i) => {
+    const done = comments[s.id][sub]?.trim().length > 20;
+    return `<div class="stab ${i===currentSIdx?'active':''} ${done?'done':''}" onclick="selectTab(${i})">${s.name.split(' ')[0]}</div>`;
+  }).join('');
+  updateTeacherProg();
+}
+function selectTab(i) {
+  currentSIdx = i;
+  document.querySelectorAll('.stab').forEach((t,j) => t.classList.toggle('active', j===i));
+  renderStudentPanel(STUDENTS[i]);
+}
+function renderStudentPanel(s) {
+  const sub = getMySub();
+  if (!sub) return;
+  const subLabel = sub;
+  const sc  = v => v>=75?'p-green':v>=60?'p-teal':v>=50?'p-amber':'p-coral';
+  const chips = SUBS.map(k => `<span class="pill ${sc(s.scores[k])}" style="font-size:12px;padding:3px 10px">${k}: ${s.scores[k]}</span>`).join('');
+
+  // WA strip: use MT wa data if MT, otherwise derive from score
+  const rawScore = s.scores[sub];
+  const seed = n => { let h=0; for(let c of n) h=(h*31+c.charCodeAt(0))&0xffff; return h/0xffff; };
+  const wa1 = sub==='Mother Tongue' && s.wa?.mt ? s.wa.mt.wa1 : Math.round(Math.min(100, rawScore - 3 + seed(s.id+sub)*4));
+  const wa2 = sub==='Mother Tongue' && s.wa?.mt ? s.wa.mt.wa2 : Math.round(Math.min(100, rawScore + 2 + seed(s.id+sub+'2')*4));
+  const semAvg = sub==='Mother Tongue' && s.wa?.mt ? s.wa.mt.avg : Math.round((wa1*0.4 + wa2*0.6)*10)/10;
+
+  const waStrip = `
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="background:var(--bg);border-radius:6px;padding:8px 14px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">WA1</div>
+        <div style="font-size:18px;font-weight:600">${wa1}</div></div>
+      <div style="background:var(--bg);border-radius:6px;padding:8px 14px;text-align:center">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">WA2</div>
+        <div style="font-size:18px;font-weight:600">${wa2}</div></div>
+      <div style="background:var(--purple-l);border-radius:6px;padding:8px 14px;text-align:center">
+        <div style="font-size:10px;color:var(--purple-d);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Sem 1 Avg</div>
+        <div style="font-size:18px;font-weight:600;color:var(--purple-d)">${semAvg}</div></div>
+    </div>`;
+
+  const v   = comments[s.id][sub]||'';
+  const key = s.id+'-'+sub.replace(/ /g,'_');
+  const field = `<div class="field-group">
+    <div class="field-label">${subLabel} comment <span style="color:var(--hint);font-weight:400">(40–80 words)</span></div>
+    <div class="ai-bar"><span>✨ AI draft based on Sem 1 avg ${semAvg}/100</span>
+      <button class="btn btn-outline" style="font-size:11px;padding:4px 10px" onclick="aiDraft('${s.id}')">Draft for me</button></div>
+    <textarea id="ta-${key}" rows="4" placeholder="Comment for ${s.name.split(' ')[0]} in ${subLabel}..."
+      oninput="saveComment('${s.id}','${sub}',this.value)">${v}</textarea>
+    <div style="display:flex;justify-content:space-between;margin-top:4px">
+      <span class="saved-badge" id="saved-${key}">✓ Saved</span>
+      <span style="font-size:11px;color:var(--hint)" id="cc-${key}">${v.length} chars</span>
+    </div></div>`;
+
+  document.getElementById('student-panel').innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:12px;flex-wrap:wrap">
+      <div><div style="font-size:16px;font-weight:600;margin-bottom:2px">${s.name}</div>
+        <div style="font-size:12px;color:var(--muted)">Class 2E1 · Attendance ${s.att}% · CCA: ${s.cca} · ${s.leadership}</div></div>
+      <span class="pill ${s.risk==='High'?'p-coral':s.risk==='Medium'?'p-amber':'p-green'}">${s.risk} risk</span></div>
+    ${waStrip}
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">${chips}</div>
+    <div style="border-top:0.5px solid var(--border);padding-top:16px">${field}</div>`;
+}
+function saveComment(sid, sub, val) {
+  comments[sid][sub] = val;
+  const key = sid+'-'+sub.replace(/ /g,'_');
+  document.getElementById('cc-'+key).textContent = val.length+' chars';
+  const b = document.getElementById('saved-'+key); b.style.display='inline';
+  setTimeout(()=>{ b.style.display='none'; },1800);
+  renderTabs();
+  // Refresh progress bars on subject selector cards
+  SUBJECT_LIST.forEach(s => {
+    const filled = STUDENTS.filter(st => comments[st.id][s]?.trim().length > 20).length;
+    const pct    = Math.round(filled/STUDENTS.length*100);
+    const allDone = filled === STUDENTS.length;
+    const btn = document.querySelector(`#subject-selector .sub-btn[data-sub="${s}"]`);
+    if (!btn) return;
+    btn.querySelector('div:nth-child(2)').textContent = `${filled}/${STUDENTS.length} done`;
+    const bar = btn.querySelector('div:last-child div');
+    if (bar) { bar.style.width = pct+'%'; bar.style.background = allDone?'var(--teal)':'var(--purple)'; }
+    btn.classList.toggle('sub-btn-done', allDone);
+  });
+}
+function updateTeacherProg() {
+  const sub = getMySub();
+  if (!sub) return;
+  let d=0; STUDENTS.forEach(s=>{ if(comments[s.id][sub]?.trim().length>20) d++; });
+  document.getElementById('teacher-pb').style.width=(d/STUDENTS.length*100)+'%';
+  document.getElementById('teacher-pt').textContent=d+' / '+STUDENTS.length+' done';
+}
+async function aiDraft(sid) {
+  const s      = STUDENTS.find(x=>x.id===sid);
+  const sub    = getMySub();
+  const subLabel = sub;
+  const rawScore = s.scores[sub];
+  const seed = n => { let h=0; for(let c of n) h=(h*31+c.charCodeAt(0))&0xffff; return h/0xffff; };
+  const wa1 = sub==='Mother Tongue' && s.wa?.mt ? s.wa.mt.wa1 : Math.round(Math.min(100, rawScore-3+seed(s.id+sub)*4));
+  const wa2 = sub==='Mother Tongue' && s.wa?.mt ? s.wa.mt.wa2 : Math.round(Math.min(100, rawScore+2+seed(s.id+sub+'2')*4));
+  const semAvg = Math.round((wa1*0.4+wa2*0.6)*10)/10;
+  const key = sid+'-'+sub.replace(/ /g,'_');
+  const ta  = document.getElementById('ta-'+key);
+  ta.disabled=true; ta.value='AI is drafting...';
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,messages:[{role:"user",content:
+        `Write a brief professional subject teacher comment (40–60 words) for a Singapore secondary school parent report.
+Student: ${s.name}, Sec 2, Class 2E1. Subject: ${subLabel}.
+WA1: ${wa1}/100, WA2: ${wa2}/100, Semester 1 average: ${semAvg}/100. Attendance: ${s.att}%.
+Tone: encouraging, specific, professional Singapore school style. Do NOT mention exact scores. Comment only, no preamble.`}]})});
+    const data = await resp.json();
+    ta.value = data.content[0].text.trim();
+    saveComment(sid, sub, ta.value);
+  } catch(e) { ta.value=''; alert('API error — please type manually.'); }
+  ta.disabled=false;
+}
+
+// ─── FORM TEACHER ─────────────────────────────────
+function prefillComments() {
+  const fills = {
+    "2E101":{ Science:"Aisha demonstrates strong conceptual grasp and asks thoughtful questions. She would benefit from more structured practice with examination answers.",
+      Mathematics:"Aisha approaches problem-solving with confidence and her workings are well-organised. She is encouraged to challenge herself with higher-order questions.",
+      "Mother Tongue":"Aisha's oral work is commendable. She is encouraged to read widely to strengthen written expression.",
+      Humanities:"Aisha engages critically with sources. Her essays show good structure; she should substantiate arguments with more specific evidence.",
+      Art:"A dedicated and focused learner who consistently completes assignments on time." },
+    "2E102":{ Science:"Chloe finds some concepts challenging and will benefit from attending remedial sessions. Her positive attitude in class is encouraging.",
+      Mathematics:"Chloe is working to build her foundational skills in Mathematics. Consistent practice and attendance at support sessions will help her make stronger progress.",
+      "Mother Tongue":"Chloe has made steady progress. Continued practice with written composition will consolidate her learning.",
+      Humanities:"Chloe is a willing learner who needs to develop analytical skills further.",
+      Art:"Chloe is encouraged to review foundational concepts and make use of support resources." },
+    "2E103":{ Science:"Priya shows genuine interest in Science and participates actively in lab work. She should focus on organising written answers more clearly.",
+      Mathematics:"Priya has a solid grasp of core concepts and works diligently. She is encouraged to show more working in examinations to secure method marks.",
+      "Mother Tongue":"Priya communicates with confidence. Written accuracy remains an area for development.",
+      Humanities:"Priya contributes well to discussions and is encouraged to apply the same rigour in written work.",
+      Art:"A consistent performer who works well independently and in groups." },
+    "2E104":{ Science:"Zhang Hui Ling is exceptional — her experimental work is meticulous and her written responses show deep understanding.",
+      Mathematics:"Hui Ling consistently demonstrates outstanding ability. Her solutions are elegant and precise. She is strongly encouraged to join the Mathematics Olympiad programme.",
+      "Mother Tongue":"Outstanding. Hui Ling's written work is precise and creative. She is encouraged to continue pursuing Chinese literature.",
+      Humanities:"Hui Ling produces insightful essays with well-structured arguments and is an asset to class discussions.",
+      Art:"Hui Ling demonstrates mastery of the curriculum and is encouraged to explore extension work." },
+    "2E105":{ Science:"Nurul shows genuine curiosity. Her attendance has affected continuity of learning; consistent attendance will help consolidate concepts.",
+      Mathematics:"Nurul has shown improvement when present and engaged. Regular attendance is key to consolidating the topics covered this semester.",
+      "Mother Tongue":"Nurul has a good foundation and communicates warmly. Consistent revision will help her reach her full potential.",
+      Humanities:"Nurul engages meaningfully when present and is encouraged to catch up on missed content promptly.",
+      Art:"Nurul has ability but attendance gaps have impacted progress. She is warmly encouraged to attend regularly." },
+  };
+  STUDENTS.forEach(s => {
+    if (fills[s.id]) Object.entries(fills[s.id]).forEach(([sub,t]) => { comments[s.id][sub]=t; });
+    const eng = s.scores["English"], mth = s.scores["Mathematics"];
+    if (!comments[s.id]["English"])
+      comments[s.id]["English"] = eng>=75
+        ? `${s.name.split(' ')[0]} demonstrates strong language skills and writes with clarity. She is encouraged to continue developing her critical voice.`
+        : eng>=60 ? `${s.name.split(' ')[0]} has shown steady progress. She should focus on analytical writing and expanding vocabulary.`
+        : `${s.name.split(' ')[0]} is encouraged to practise writing regularly and attend available support sessions.`;
+    if (!comments[s.id]["Mathematics"])
+      comments[s.id]["Mathematics"] = mth>=80
+        ? `${s.name.split(' ')[0]} is a strong Mathematics student who approaches problems with rigour. She is encouraged to explore extension problems.`
+        : mth>=60 ? `${s.name.split(' ')[0]} has a solid foundation and is making good progress. Regular practice will consolidate her skills.`
+        : `${s.name.split(' ')[0]} is working to strengthen fundamentals. Remedial sessions and consistent practice will support her improvement.`;
+  });
+}
+
+function getStatus(s) {
+  if (sentEmails.find(e=>e.sid===s.id)) return 'sent';
+  const filled = SUBS.filter(sub=>comments[s.id][sub]?.trim().length>20).length;
+  if (filled===SUBS.length) return 'ready';
+  return 'partial';
+}
+function renderFormPage() { renderGrid('all'); updateFTCounts(); }
+function renderGrid(filter) {
+  document.getElementById('class-grid').innerHTML = STUDENTS.filter(s=>{
+    const st=getStatus(s);
+    if(filter==='ready') return st==='ready';
+    if(filter==='partial') return st==='partial';
+    if(filter==='sent') return st==='sent';
+    return true;
+  }).map(s => {
+    const st=getStatus(s), filled=SUBS.filter(sub=>comments[s.id][sub]?.trim().length>20).length;
+    const pct=Math.round(filled/SUBS.length*100);
+    const chips=SUBS.map(sub=>{
+      const done=comments[s.id][sub]?.trim().length>20;
+      return `<span class="pill ${done?'p-teal':'p-amber'}" style="font-size:10px">${sub.split(' ')[0]}</span>`;
+    }).join('');
+    const sentInfo = sentEmails.find(e=>e.sid===s.id);
+    return `<div class="sc-card ${st}" onclick="openReport('${s.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div><div style="font-size:14px;font-weight:600;margin-bottom:2px">${s.name}</div>
+          <div style="font-size:11px;color:var(--muted)">Avg ${s.avg} · Att ${s.att}%</div>
+          <div style="font-size:11px;color:var(--muted)">${s.cca} · <span style="color:var(--purple-d)">${s.leadership}</span></div></div>
+        <span class="pill ${s.risk==='High'?'p-coral':s.risk==='Medium'?'p-amber':'p-green'}">${s.risk}</span></div>
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px">
+          <span>Comments</span><span>${filled}/${SUBS.length}</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${st==='ready'?'var(--teal)':'#BA7517'}"></div></div></div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">${chips}</div>
+      ${sentInfo
+        ? `<div style="font-size:11px;color:var(--purple-d);background:var(--purple-l);padding:5px 10px;border-radius:6px">✉ Sent to ${sentInfo.email} · ${sentInfo.time}</div>`
+        : `<div style="font-size:12px;color:${st==='ready'?'var(--purple)':'var(--hint)'};text-align:right">${st==='ready'?'Click to open report →':'Awaiting '+(SUBS.length-filled)+' comments'}</div>`}
+    </div>`;
+  }).join('');
+}
+function filterCards(f,btn) {
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderGrid(f);
+}
+function updateFTCounts() {
+  const ready=STUDENTS.filter(s=>getStatus(s)==='ready'||getStatus(s)==='sent').length;
+  document.getElementById('ft-ready').textContent=ready;
+  document.getElementById('ft-rpts').textContent=Object.keys(generatedReports).length;
+  document.getElementById('ft-sent').textContent=sentEmails.length;
+}
+
+// ─── REPORT MODAL ─────────────────────────────────
+function openReport(sid) {
+  currentSid=sid;
+  const s=STUDENTS.find(x=>x.id===sid);
+  document.getElementById('modal-title').textContent='Parent Report — '+s.name;
+  document.getElementById('report-modal').classList.add('open');
+  document.getElementById('btn-regen').style.display='none';
+  document.getElementById('btn-send-email').style.display='none';
+  renderReportBase(sid, generatedReports[sid]||null);
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  if(id==='report-modal') { updateFTCounts(); renderGrid('all'); }
+  if(id==='email-modal') {
+    document.getElementById('send-success').style.display='none';
+    document.getElementById('email-form-view').style.display='block';
+    document.getElementById('email-modal-ftr').style.display='flex';
+  }
+}
+
+function renderReportBase(sid, aiLetter) {
+  const s=STUDENTS.find(x=>x.id===sid);
+  const today=new Date().toLocaleDateString('en-SG',{day:'numeric',month:'long',year:'numeric'});
+  const scoreRows=SUBS.map(sub=>{
+    const v=s.scores[sub]; const col=v>=75?'#1D9E75':v>=60?'#BA7517':'#D85A30';
+    const wa = sub==='Mother Tongue' && s.wa?.mt
+      ? `<span style="font-size:11px;color:var(--muted);margin-left:8px">WA1 ${s.wa.mt.wa1} · WA2 ${s.wa.mt.wa2}</span>` : '';
+    return `<tr><td>${sub}${wa}</td><td><strong>${v}</strong>/100
+      <div class="sbar"><div class="sbar-fill" style="width:${v}%;background:${col}"></div></div></td>
+      <td><span class="pill ${v>=75?'p-green':v>=60?'p-amber':'p-coral'}">${v>=75?'Good':v>=60?'Progressing':'Needs support'}</span></td></tr>`;
+  }).join('');
+  const commentBlocks=SUBS.map(sub=>{
+    const c=comments[sid][sub];
+    return `<div class="tc-block"><div class="tc-subj">${sub}</div>
+      <div class="tc-text">${c?.trim().length>5?c:'<span style="color:var(--hint);font-style:italic">No comment submitted.</span>'}</div></div>`;
+  }).join('');
+  const aiSection = aiLetter
+    ? `<div class="rpt-section"><div class="rpt-sec-title">AI-Drafted Parent Letter</div>
+        <div style="font-size:11px;color:var(--amber);background:var(--amber-l);padding:6px 12px;border-radius:6px;margin-bottom:10px">
+          ⚠ AI-drafted — reviewed and approved by Mrs Lim before sending</div>
+        <div class="ai-letter-box">${aiLetter}</div></div>`
+    : `<div class="rpt-section"><div class="rpt-sec-title">AI-Drafted Parent Letter</div>
+        <div style="display:flex;flex-direction:column;align-items:center;padding:24px;gap:12px;background:var(--bg);border-radius:var(--r)">
+          <div style="font-size:13px;color:var(--muted);text-align:center">Click to generate a personalised letter synthesising all subject comments and student data.</div>
+          <button class="btn btn-primary" onclick="generateAI()">✨ Generate AI Parent Letter</button></div></div>`;
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="rpt-hdr">
+      <div class="rpt-school">SG Secondary School</div>
+      <div class="rpt-title">Parent Conference Report — ${s.name}</div>
+      <div class="rpt-meta">Class 2E1 · ${today} · Form Teacher: Ms Sun Guizi</div></div>
+    <div class="rpt-section"><div class="rpt-sec-title">Student Overview</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">
+        <div style="background:var(--bg);border-radius:8px;padding:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Sem 1 average</div><div style="font-size:18px;font-weight:600">${s.avg}</div></div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Attendance</div><div style="font-size:18px;font-weight:600">${s.att}%</div></div>
+        <div style="background:var(--bg);border-radius:8px;padding:12px"><div style="font-size:11px;color:var(--muted);margin-bottom:2px">CCA</div><div style="font-size:16px;font-weight:600">${s.cca||'—'}</div></div>
+        <div style="background:var(--purple-l);border-radius:8px;padding:12px"><div style="font-size:11px;color:var(--purple-d);margin-bottom:2px">Class role</div><div style="font-size:13px;font-weight:600;color:var(--purple-d)">${s.leadership}</div></div>
+      </div></div>
+    <div class="rpt-section"><div class="rpt-sec-title">Academic Performance — Semester 1</div>
+      <table class="score-table"><thead><tr><th>Subject</th><th>Score</th><th>Status</th></tr></thead><tbody>${scoreRows}</tbody></table></div>
+    <div class="rpt-section"><div class="rpt-sec-title">Subject Teacher Comments</div>${commentBlocks}</div>
+    ${aiSection}`;
+}
+
+async function generateAI() {
+  const sid=currentSid, s=STUDENTS.find(x=>x.id===sid);
+  document.querySelector('#modal-body .rpt-section:last-child').innerHTML=
+    `<div class="rpt-sec-title">AI-Drafted Parent Letter</div>
+     <div style="display:flex;align-items:center;gap:10px;padding:20px;background:var(--purple-l);border-radius:var(--r);font-size:13px;color:var(--purple-d)">
+       ✨ Generating personalised letter<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></div>`;
+  const today=new Date().toLocaleDateString('en-SG',{day:'numeric',month:'long',year:'numeric'});
+  const commentSummary=SUBS.map(sub=>`${sub} (score ${s.scores[sub]}/100): ${comments[sid][sub]||'No comment.'}`).join('\n');
+  try {
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,
+        system:`You are Ms Sun Guizi, Form Teacher 2E1 at SG Secondary School, writing a personalised parent conference letter synthesising all subject teacher feedback.
+Rules: Open "Dear Parent/Guardian of ${s.name},". Lead with genuine strengths. Highlight 2–3 specific concerns from comments. If attendance below 95% address it supportively. Mention CCA as character development if applicable. Mention class leadership role if relevant. Suggest 2–3 concrete next steps. Close warmly, invite parents to conference. 280–340 words. Date: ${today}. Sign off: Ms Sun Guizi, Form Teacher 2E1, SG Secondary School. Never mention "risk score".`,
+        messages:[{role:"user",content:`Student: ${s.name} | Class 2E1 | Sem 1 Avg: ${s.avg}/100 | Attendance: ${s.att}% | CCA: ${s.cca} (${s.ccaH} hrs/wk) | Class role: ${s.leadership}\n\nSubject comments:\n${commentSummary}`}]})});
+    const data=await resp.json();
+    const letter=data.content[0].text.trim();
+    generatedReports[sid]=letter;
+    renderReportBase(sid,letter);
+    document.getElementById('btn-regen').style.display='inline-block';
+    document.getElementById('btn-send-email').style.display='inline-block';
+    updateFTCounts();
+  } catch(e) {
+    document.querySelector('#modal-body .rpt-section:last-child').innerHTML=
+      `<div class="rpt-sec-title">AI-Drafted Parent Letter</div><div style="color:var(--coral);font-size:13px;padding:12px">Error generating — please try again.</div>`;
+  }
+}
+function regenReport() { delete generatedReports[currentSid]; document.getElementById('btn-regen').style.display='none'; document.getElementById('btn-send-email').style.display='none'; renderReportBase(currentSid,null); }
+
+// ─── EMAIL COMPOSER ────────────────────────────────
+function openEmailComposer() {
+  const s=STUDENTS.find(x=>x.id===currentSid);
+  const letter=generatedReports[currentSid]||'';
+  document.getElementById('email-to').value=s.parentEmail;
+  document.getElementById('email-subject').value=`Parent Conference Report — ${s.name} (Class 2E1)`;
+  const today=new Date().toLocaleDateString('en-SG',{day:'numeric',month:'long',year:'numeric'});
+  const fullEmail=`Dear Parent/Guardian,\n\nPlease find below ${s.name}'s Parent Conference Report for your reference ahead of our upcoming conference.\n\n─────────────────────────────\n${letter}\n─────────────────────────────\n\nKindly bring this report to the conference on the scheduled date. If you have any questions beforehand, please do not hesitate to contact me.\n\nWarm regards,\nMs Sun Guizi\nForm Teacher, Class 2E1\nSG Secondary School\nDate: ${today}`;
+  document.getElementById('email-preview').textContent=fullEmail;
+  document.getElementById('send-success').style.display='none';
+  document.getElementById('email-form-view').style.display='block';
+  document.getElementById('email-modal-ftr').style.display='flex';
+  document.getElementById('email-modal').classList.add('open');
+}
+
+async function confirmSend() {
+  const sid=currentSid, s=STUDENTS.find(x=>x.id===sid);
+  const to=document.getElementById('email-to').value;
+  const subj=document.getElementById('email-subject').value;
+  const body=document.getElementById('email-preview').textContent;
+  const btn=document.getElementById('btn-confirm-send');
+  btn.disabled=true; btn.textContent='Sending...';
+
+  // Simulate send (in production: call Gmail API / school email system)
+  await new Promise(r=>setTimeout(r,1400));
+
+  const timeStr=new Date().toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});
+  sentEmails.push({ sid, name:s.name, email:to, subject:subj, body, time:timeStr });
+
+  document.getElementById('email-form-view').style.display='none';
+  document.getElementById('email-modal-ftr').style.display='none';
+  const suc=document.getElementById('send-success');
+  suc.style.display='block';
+  document.getElementById('send-success-detail').textContent=`Report for ${s.name} sent to ${to} at ${timeStr}.`;
+  btn.disabled=false; btn.textContent='Send email';
+
+  updateFTCounts();
+  renderGrid('all');
+  // Auto-close after 2.5s
+  setTimeout(()=>{ closeModal('email-modal'); closeModal('report-modal'); renderSentLog(); },2500);
+}
+
+// ─── SUB-TAB (subject teacher) ────────────────────
+function switchSubTab(t) {
+  document.getElementById('subtab-comments').style.display = t==='comments' ? 'block' : 'none';
+  document.getElementById('subtab-upload').style.display   = t==='upload'   ? 'block' : 'none';
+  document.getElementById('stab-comments').classList.toggle('active', t==='comments');
+  document.getElementById('stab-upload').classList.toggle('active',   t==='upload');
+}
+
+// ─── EXCEL UPLOAD ─────────────────────────────────
+let parsedSheet = [];   // raw rows from SheetJS
+let detectedCols = [];  // column headers found in file
+let uploadFilename = '';
+
+const REQUIRED_FIELDS = [
+  { key:'id',   label:'Student ID',  guesses:['student id','studentid','reg no','regno','id'] },
+  { key:'wa1',  label:'WA1 score',   guesses:['wa1','weighted assessment 1','assessment 1','test 1','t1','ca1'] },
+  { key:'wa2',  label:'WA2 score',   guesses:['wa2','weighted assessment 2','assessment 2','test 2','t2','ca2'] },
+];
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  uploadFilename = file.name;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type:'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+      if (rows.length < 2) { showUploadErr('upload-err', 'File appears empty — need at least a header row and one data row.'); return; }
+
+      // Normalise headers
+      detectedCols = rows[0].map(h => String(h).trim());
+      parsedSheet  = rows.slice(1).filter(r => r.some(c => c !== ''));
+
+      // Auto-guess column mapping
+      buildColMapper();
+      document.getElementById('map-filename').textContent  = file.name;
+      document.getElementById('map-rowcount').textContent  = `${parsedSheet.length} data rows detected · Sheet: ${wb.SheetNames[0]}`;
+      showUploadStep('upload-s2');
+    } catch(err) {
+      showUploadErr('upload-err', 'Could not read file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function buildColMapper() {
+  const tbody = document.getElementById('col-map-rows');
+  tbody.innerHTML = REQUIRED_FIELDS.map(field => {
+    const guessed = detectedCols.findIndex(h => field.guesses.includes(h.toLowerCase().replace(/[^a-z0-9]/g,'')));
+    const options = ['<option value="">— select column —</option>',
+      ...detectedCols.map((h,i) => `<option value="${i}" ${i===guessed?'selected':''}>${h || '(column '+(i+1)+')'}</option>`)
+    ].join('');
+
+    // Preview value from first data row
+    const previewVal = (guessed >= 0 && parsedSheet[0]) ? parsedSheet[0][guessed] : '—';
+
+    return `<tr>
+      <td><span style="font-weight:500">${field.label}</span></td>
+      <td><select id="map-${field.key}" onchange="updatePreview('${field.key}')">${options}</select></td>
+      <td style="color:var(--muted);font-size:11px" id="prev-${field.key}">${previewVal}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updatePreview(fieldKey) {
+  const sel = document.getElementById('map-'+fieldKey);
+  const colIdx = parseInt(sel.value);
+  const val = (!isNaN(colIdx) && parsedSheet[0]) ? parsedSheet[0][colIdx] : '—';
+  document.getElementById('prev-'+fieldKey).textContent = val;
+}
+
+function confirmImport() {
+  // Read mapping selections
+  const mapping = {};
+  for (const f of REQUIRED_FIELDS) {
+    const val = document.getElementById('map-'+f.key).value;
+    if (val === '') { showUploadErr('map-err', `Please select a column for "${f.label}".`); return; }
+    mapping[f.key] = parseInt(val);
+  }
+  document.getElementById('map-err').style.display = 'none';
+
+  // Parse and join
+  let matched = 0, unmatched = [], rows = [];
+  const mySubject = "English"; // subject teacher's subject — in real app, taken from login profile
+
+  parsedSheet.forEach(row => {
+    const rawId  = String(row[mapping.id]).trim();
+    const wa1Raw = parseFloat(row[mapping.wa1]);
+    const wa2Raw = parseFloat(row[mapping.wa2]);
+    if (!rawId) return;
+
+    const student = STUDENTS.find(s => s.id === rawId);
+    if (!student) { unmatched.push(rawId); return; }
+
+    // Compute weighted average (WA1 40%, WA2 60%) — teacher can see WA breakdown
+    const wa1 = isNaN(wa1Raw) ? null : Math.round(wa1Raw * 10) / 10;
+    const wa2 = isNaN(wa2Raw) ? null : Math.round(wa2Raw * 10) / 10;
+    const avg = (wa1 !== null && wa2 !== null)
+      ? Math.round((wa1 * 0.4 + wa2 * 0.6) * 10) / 10
+      : (wa1 ?? wa2 ?? null);
+
+    // Update student scores for this teacher's subjects
+    // In demo we update English and Mathematics (the two subjects Ms Tan teaches)
+    if (avg !== null) {
+      student.scores["English"]     = avg;
+      student.scores["Mathematics"] = Math.round((wa1 !== null ? wa1 : avg) * 10) / 10;
+    }
+    // Store WA breakdown for display
+    student.wa = student.wa || {};
+    student.wa["English"]     = { wa1, wa2, avg };
+    student.wa["Mathematics"] = { wa1, wa2, avg };
+
+    matched++;
+    rows.push({ id: student.id, name: student.name, wa1, wa2, avg });
+  });
+
+  // Recalculate overall avg for each matched student
+  STUDENTS.forEach(s => {
+    const vals = Object.values(s.scores).filter(v => !isNaN(v));
+    s.avg = vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length*10)/10 : s.avg;
+  });
+
+  // Show success
+  const detail = unmatched.length
+    ? `${matched} matched · ${unmatched.length} IDs not found in class list: ${unmatched.slice(0,3).join(', ')}${unmatched.length>3?'…':''}`
+    : `${matched} of ${parsedSheet.length} students matched successfully.`;
+  document.getElementById('import-success-msg').textContent = `Scores imported from ${uploadFilename}`;
+  document.getElementById('import-success-detail').textContent = detail;
+
+  // Preview table
+  document.getElementById('import-preview-table').innerHTML =
+    `<thead><tr><th>Student ID</th><th>Name</th><th>WA1</th><th>WA2</th><th>Weighted avg (40/60)</th><th>Status</th></tr></thead>
+     <tbody>${rows.map(r => `<tr>
+       <td>${r.id}</td><td>${r.name}</td>
+       <td>${r.wa1 ?? '—'}</td><td>${r.wa2 ?? '—'}</td>
+       <td><strong>${r.avg ?? '—'}</strong></td>
+       <td><span class="pill p-teal">✓ Matched</span></td>
+     </tr>`).join('')}
+     ${unmatched.map(id=>`<tr><td>${id}</td><td colspan="4" style="color:var(--hint);font-style:italic">Not found in class 2E1</td><td><span class="pill p-amber">Unmatched</span></td></tr>`).join('')}
+     </tbody>`;
+
+  showUploadStep('upload-s3');
+  // Refresh comment panels with new scores
+  renderTabs();
+  if (currentSIdx !== null) renderStudentPanel(STUDENTS[currentSIdx]);
+}
+
+function showUploadErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.style.display = 'block';
+}
+function showUploadStep(step) {
+  ['upload-s1','upload-s2','upload-s3'].forEach(s => {
+    document.getElementById(s).classList.toggle('active', s===step);
+  });
+}
+function resetUpload() {
+  document.getElementById('file-input').value = '';
+  document.getElementById('upload-err').style.display = 'none';
+  document.getElementById('map-err').style.display = 'none';
+  showUploadStep('upload-s1');
+}
+
+// ─── ANALYTICS ────────────────────────────────────
+let chartInstances = {};
+function destroyChart(id) {
+  if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+}
+
+function renderAnalytics() {
+  const SUBS = ["English","Mathematics","Science","Mother Tongue","Humanities","Art"];
+  const font = { family:"-apple-system,'Segoe UI',sans-serif", size:11 };
+  const gridColor = 'rgba(0,0,0,0.05)';
+  const tickColor = '#9b9890';
+
+  const classAvg = Math.round(STUDENTS.reduce((s,x)=>s+x.avg,0)/STUDENTS.length*10)/10;
+  const attAvg   = Math.round(STUDENTS.reduce((s,x)=>s+x.att,0)/STUDENTS.length*10)/10;
+  const atRisk   = STUDENTS.filter(s=>s.risk==='High'||s.risk==='Medium').length;
+  const subAvgs  = SUBS.map(sub=>({ sub, avg: Math.round(STUDENTS.reduce((s,x)=>s+x.scores[sub],0)/STUDENTS.length*10)/10 }));
+  const weakest  = subAvgs.reduce((a,b)=>a.avg<b.avg?a:b);
+  document.getElementById('an-avg').textContent  = classAvg;
+  document.getElementById('an-att').textContent  = attAvg+'%';
+  document.getElementById('an-risk').textContent = atRisk+' / '+STUDENTS.length;
+  document.getElementById('an-weak').textContent = weakest.sub.split(' ')[0];
+
+  destroyChart('subject');
+  const subColors = subAvgs.map(d=>d.avg>=75?'#1D9E75':d.avg>=60?'#534AB7':d.avg>=50?'#BA7517':'#D85A30');
+  chartInstances['subject'] = new Chart(document.getElementById('chart-subject'),{
+    type:'bar',
+    data:{ labels:SUBS.map(s=>s.length>9?s.split(' ')[0]:s),
+      datasets:[{ data:subAvgs.map(d=>d.avg), backgroundColor:subColors, borderRadius:4, borderSkipped:false }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>` Avg: ${ctx.raw}/100`}} },
+      scales:{
+        y:{ min:0,max:100,grid:{color:gridColor},ticks:{color:tickColor,font,stepSize:25,callback:v=>v===0?'':v} },
+        x:{ grid:{display:false},ticks:{color:tickColor,font} }
+      }
+    }
+  });
+
+  destroyChart('dist');
+  const bands=[
+    {label:'75–100  Distinction',min:75,max:101,color:'#1D9E75'},
+    {label:'60–74  Pass',        min:60,max:75, color:'#534AB7'},
+    {label:'50–59  Borderline',  min:50,max:60, color:'#BA7517'},
+    {label:'Below 50  Failing',  min:0, max:50, color:'#D85A30'},
+  ];
+  chartInstances['dist'] = new Chart(document.getElementById('chart-dist'),{
+    type:'doughnut',
+    data:{ labels:bands.map(b=>b.label),
+      datasets:[{ data:bands.map(b=>STUDENTS.filter(s=>s.avg>=b.min&&s.avg<b.max).length),
+        backgroundColor:bands.map(b=>b.color), borderWidth:2, borderColor:'#fff', hoverOffset:6 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{
+        legend:{position:'bottom',labels:{font,color:tickColor,boxWidth:10,padding:8}},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.raw} student${ctx.raw!==1?'s':''}`}}
+      }
+    }
+  });
+
+  destroyChart('trend');
+  const seed = s => { let h=0; for(let c of s.id) h=(h*31+c.charCodeAt(0))&0xffff; return h/0xffff; };
+  const wa1vals = STUDENTS.map(s => s.wa?.mt?.wa1 ?? Math.round(Math.min(100,Math.max(30, s.avg-4+(seed(s)*6)))*10)/10);
+  const wa2vals = STUDENTS.map(s => s.wa?.mt?.wa2 ?? Math.round(Math.min(100,Math.max(30, s.avg+2+(seed(s)*4)))*10)/10);
+  chartInstances['trend'] = new Chart(document.getElementById('chart-trend'),{
+    type:'bar',
+    data:{
+      labels: STUDENTS.map(s=>s.name.split(' ')[0]),
+      datasets:[
+        { label:'WA1', data:wa1vals,
+          backgroundColor:'#AFA9EC', borderRadius:3, barPercentage:0.35 },
+        { label:'WA2', data:wa2vals,
+          backgroundColor:'#534AB7', borderRadius:3, barPercentage:0.35 }
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'bottom',labels:{font,color:tickColor,boxWidth:10,padding:8}},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw}/100`}}
+      },
+      scales:{
+        y:{min:30,max:100,grid:{color:gridColor},ticks:{color:tickColor,font}},
+        x:{grid:{display:false},ticks:{color:tickColor,font}}
+      }
+    }
+  });
+
+  destroyChart('scatter');
+  const riskCol={High:'#D85A30',Medium:'#BA7517',Low:'#1D9E75'};
+  chartInstances['scatter'] = new Chart(document.getElementById('chart-scatter'),{
+    type:'scatter',
+    data:{ datasets:[{
+      label:'Students',
+      data: STUDENTS.map(s=>({x:s.att,y:s.avg,name:s.name.split(' ')[0],risk:s.risk})),
+      backgroundColor: STUDENTS.map(s=>riskCol[s.risk]+'bb'),
+      borderColor:     STUDENTS.map(s=>riskCol[s.risk]),
+      pointRadius:9, pointHoverRadius:12, borderWidth:1.5
+    }]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>[` ${ctx.raw.name}`,` Att: ${ctx.raw.x}%`,` Avg: ${ctx.raw.y}`,` Risk: ${ctx.raw.risk}`]}}
+      },
+      scales:{
+        x:{ title:{display:true,text:'Attendance rate (%)',color:tickColor,font},
+            min:85,max:101,grid:{color:gridColor},ticks:{color:tickColor,font} },
+        y:{ title:{display:true,text:'Overall average',color:tickColor,font},
+            min:40,max:100,grid:{color:gridColor},ticks:{color:tickColor,font} }
+      }
+    }
+  });
+
+  const riskOrder={High:0,Medium:1,Low:2};
+  const sorted=[...STUDENTS].sort((a,b)=>riskOrder[a.risk]-riskOrder[b.risk]);
+  document.getElementById('risk-table').innerHTML=`
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead><tr style="border-bottom:0.5px solid var(--border)">
+        <th style="text-align:left;padding:7px 10px;font-size:11px;color:var(--muted);font-weight:600">Student</th>
+        <th style="padding:7px 10px;font-size:11px;color:var(--muted);font-weight:600">Risk</th>
+        <th style="text-align:right;padding:7px 10px;font-size:11px;color:var(--muted);font-weight:600">Avg</th>
+        <th style="text-align:right;padding:7px 10px;font-size:11px;color:var(--muted);font-weight:600">Attendance</th>
+        <th style="text-align:left;padding:7px 10px;font-size:11px;color:var(--muted);font-weight:600">Primary concern</th>
+        <th style="text-align:left;padding:7px 10px;font-size:11px;color:var(--muted);font-weight:600">CCA</th>
+        <th style="text-align:left;padding:7px 10px;font-size:11px;color:var(--muted);font-weight:600">Class role</th>
+      </tr></thead>
+      <tbody>${sorted.map(s=>{
+        const concern = s.avg<55?'Academic — multiple subjects below pass'
+          :s.att<92?'Attendance — chronic absenteeism risk'
+          :s.risk==='Medium'?'Monitor — borderline in 1–2 subjects'
+          :'On track';
+        const rp = s.risk==='High'?`<span class="pill p-coral">${s.risk}</span>`
+          :s.risk==='Medium'?`<span class="pill p-amber">${s.risk}</span>`
+          :`<span class="pill p-green">${s.risk}</span>`;
+        const ac = s.att<90?'color:var(--coral);font-weight:500':s.att<95?'color:var(--amber);font-weight:500':'';
+        return `<tr style="border-bottom:0.5px solid var(--border-l)">
+          <td style="padding:9px 10px;font-weight:500">${s.name}</td>
+          <td style="padding:9px 10px">${rp}</td>
+          <td style="padding:9px 10px;text-align:right">${s.avg}</td>
+          <td style="padding:9px 10px;text-align:right;${ac}">${s.att}%</td>
+          <td style="padding:9px 10px;font-size:12px;color:var(--muted)">${concern}</td>
+          <td style="padding:9px 10px;font-size:12px;color:var(--muted)">${s.cca}</td>
+          <td style="padding:9px 10px;font-size:12px;color:var(--purple-d);font-weight:500">${s.leadership}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
+function renderSentLog() {
+  const c=document.getElementById('sent-log-content');
+  if(sentEmails.length===0){ c.innerHTML='<div style="text-align:center;padding:32px;color:var(--hint);font-size:13px">No emails sent yet.</div>'; return; }
+  c.innerHTML=sentEmails.map(e=>{
+    const initials=e.name.split(' ').slice(0,2).map(w=>w[0]).join('');
+    return `<div class="sent-row">
+      <div class="sent-avatar">${initials}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${e.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${e.subject}</div>
+        <div style="font-size:11px;color:var(--hint);margin-top:2px">To: ${e.email}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="pill p-teal" style="margin-bottom:4px">✓ Sent</div>
+        <div style="font-size:11px;color:var(--hint)">${e.time}</div>
+      </div></div>`;
+  }).join('');
+}
+</script>
+</body>
+</html>
